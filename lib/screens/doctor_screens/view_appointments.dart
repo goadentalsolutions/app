@@ -231,6 +231,7 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
       'doctorUid': widget.am.doctorUid,
       'time': widget.am.time,
       'appId': widget.am.appId,
+      'month': widget.am.month,
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
     });

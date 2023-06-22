@@ -8,6 +8,7 @@ import 'package:goa_dental_clinic/classes/alert.dart';
 import 'package:goa_dental_clinic/models/app_model.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/appointment_screen.dart';
+import 'package:goa_dental_clinic/screens/patient_screens/patient_view_appointments.dart';
 
 import '../constants.dart';
 import '../screens/doctor_screens/nav_screen.dart';
@@ -93,6 +94,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
               "title": title,
               "body": body,
               "android_channel_id": "dbfood",
+              'icon' : 'assets/logo.png'
             },
             "to": patientToken,
           },
@@ -105,6 +107,15 @@ class _AppointmentCardState extends State<AppointmentCard> {
 
     // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data saved !'), backgroundColor: Colors.green,));
     // Navigator.push(context, MaterialPageRoute(builder: (context) => NavScreen(screenNo: 2)));
+  }
+
+  updateHistory() async {
+    await firestore.collection('Doctors').doc(widget.doctorUid).collection('History').doc('${widget.patientUid}_${widget.appId}').set(
+      {
+        'status' : 'Cancelled',
+      },
+      SetOptions(merge: true),
+    );
   }
 
   deleteAppointment(){
@@ -126,6 +137,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                 await firestore.collection('Patients').doc(widget.patientUid).collection(
                     'Appointments').doc('${widget.patientUid}_${widget.appId}').delete();
                 widget.refresh(widget.appId,);
+                updateHistory();
                 sendNotificationToPatient();
                 notifyPatient(patientToken, 'Canceled appointment scheduled on ${widget.date}(${widget.week}) at ${widget.time}.', 'Notification from Dr. ${widget.doctorName}');
               }
@@ -148,6 +160,9 @@ class _AppointmentCardState extends State<AppointmentCard> {
     return InkWell(
       onTap: (){
         print(widget.doctorUid);
+        if(widget.status == 'patienthomescreen')
+        Navigator.push(context, MaterialPageRoute(builder: (context) => PatientViewAppointmentScreen(am: AppModel(patientName: widget.patientName, doctorName: widget.doctorName, date: widget.date, week: widget.week, time: widget.time, doctorUid: widget.doctorUid, patientUid: widget.patientUid, appId: widget.appId, pm: widget.pm, startTimeInMil: widget.startTimeInMil, endTimeInMil: widget.endTimeInMil, month: widget.month),),));
+        else
         Navigator.push(context, MaterialPageRoute(builder: (context) => ViewAppointmentScreen(am: AppModel(patientName: widget.patientName, doctorName: widget.doctorName, date: widget.date, week: widget.week, time: widget.time, doctorUid: widget.doctorUid, patientUid: widget.patientUid, appId: widget.appId, pm: widget.pm, startTimeInMil: widget.startTimeInMil, endTimeInMil: widget.endTimeInMil, month: widget.month),),));
       },
     child: Container(
@@ -198,7 +213,18 @@ class _AppointmentCardState extends State<AppointmentCard> {
               ),
               flex: 6,
             ),
-            PopupMenuButton(itemBuilder: (context) => [
+            PopupMenuButton(itemBuilder: (context) => (widget.status == 'patienthomescreen') ? [
+            PopupMenuItem(child: Text('View details'), onTap: (){
+              if(widget.status == 'normal'){
+                widget.onMorePressed(4);
+              }
+              else{
+                Timer(Duration(milliseconds: 200), () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => PatientDetailsScreen(pm: widget.pm, uid: widget.patientUid,)));
+                });
+              }
+            },),
+            ] : [
               PopupMenuItem(child: Text('Add treatment plan'), onTap: (){
                 if(widget.status == 'normal'){
                   widget.onMorePressed(1);
@@ -211,7 +237,6 @@ class _AppointmentCardState extends State<AppointmentCard> {
               }, value: 1,),
               PopupMenuItem(child: Text('Add prescription'), onTap: (){
                 if(widget.status == 'normal'){
-
                   widget.onMorePressed(2);
                 }
                 else{
@@ -240,7 +265,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
                   });
                 }
               },),
-              PopupMenuItem(child: Text('Delete appointment'), onTap: (){
+              PopupMenuItem(child: Text('Cancel appointment'), onTap: (){
                 deleteAppointment();
               },),
             ], icon: Icon(Icons.more_vert),),

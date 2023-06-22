@@ -59,39 +59,43 @@ class _HomeScreenState extends State<HomeScreen> {
       if(DateTime.fromMillisecondsSinceEpoch(int.parse(patient['appId'])).day == DateTime.now().day) {
         final datas = await firestore.collection('Patients').get();
         PatientModel? pm;
-        for (var data in datas.docs) {
-          if (patient['patientName'] == data['patientName'])
-            pm = GetPatientDetails().get(data);
+        if (DateTime
+            .now()
+            .millisecondsSinceEpoch < double.parse(patient['startTimeInMil'])) {
+          for (var data in datas.docs) {
+            if (patient['patientName'] == data['patientName'])
+              pm = GetPatientDetails().get(data);
+          }
+          appList.add(AppointmentCard(size: MediaQuery
+              .of(context)
+              .size,
+            patientName: patient['patientName'],
+            week: patient['week'],
+            date: patient['date'],
+            time: patient['time'],
+            onMorePressed: (int itemNo) {},
+            doctorName: patient['doctorName'],
+            doctorUid: patient['doctorUid'],
+            patientUid: patient['patientUid'],
+            status: 'homescreen',
+            appId: patient['appId'],
+            startTimeInMil: patient['startTimeInMil'],
+            endTimeInMil: patient['endTimeInMil'],
+            month: patient['month'],
+            refresh: (appId) {
+              late AppointmentCard card;
+              appList.forEach((element) {
+                if (element.appId == appId) {
+                  card = element;
+                }
+              });
+              setState(() {
+                if (card != null)
+                  appList.remove(card);
+              });
+            },
+            pm: pm,));
         }
-        appList.add(AppointmentCard(size: MediaQuery
-            .of(context)
-            .size,
-          patientName: patient['patientName'],
-          week: patient['week'],
-          date: patient['date'],
-          time: patient['time'],
-          onMorePressed: (int itemNo) {},
-          doctorName: patient['doctorName'],
-          doctorUid: patient['doctorUid'],
-          patientUid: patient['patientUid'],
-          status: 'homescreen',
-          appId: patient['appId'],
-          startTimeInMil: patient['startTimeInMil'],
-          endTimeInMil: patient['endTimeInMil'],
-          month: patient['month'],
-          refresh: (appId){
-            late AppointmentCard card;
-            appList.forEach((element) {
-              if(element.appId == appId){
-                card = element;
-              }
-            });
-            setState(() {
-              if(card != null)
-                appList.remove(card);
-            });
-          },
-          pm: pm,));
       }
     }
     appList.sort((a, b) => a.appId.compareTo(b.appId));
@@ -101,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   getDetails() async {
+    print(uid);
     setState(() {
       isLoading = true;
     });

@@ -22,12 +22,12 @@ class AddPatientScreen1 extends StatefulWidget {
 
 class _AddPatientScreen1State extends State<AddPatientScreen1> {
   String gender = '';
-  String? patientName = '',
+  String patientName = '',
       patientId = '',
       aadharId = '',
       dob = '',
       age = '',
-      bloodGrp = '',
+      bloodGrp = 'A+',
       anniversary = '';
   Map<String, String>? data;
   DateTime? pickedDate;
@@ -46,6 +46,23 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
 
     }
     getName();
+    getDetails();
+  }
+
+  getDetails() async {
+    try {
+      final data = await firestore.collection('Patients').doc(uid).get();
+      setState(() {
+        bloodGrp = data['bloodGrp'];
+        anniversary = data['anniversary'];
+        aadharId = data['aadharId'];
+        gender = data['gender'];
+        dobController.text = data['dob'];
+      });
+    }
+    catch(e){
+      print(e);
+    }
   }
 
   getName() async {
@@ -119,6 +136,7 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
                 });
               },
               inputType: TextInputType.number,
+              inputValue: aadharId,
             ),
             SizedBox(
               height: 16,
@@ -223,12 +241,13 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
                     anniversary = value;
                     updateData();
                   });
-                }),
+                }, inputValue: anniversary,),
             SizedBox(
               height: 16,
             ),
             PatientDropDown(
                 title: 'Blood group',
+                hintText: bloodGrp,
                 list: [
                   DropDownValueModel(name: 'A+', value: 'A+'),
                   DropDownValueModel(name: 'A-', value: 'A-'),

@@ -32,6 +32,7 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
   List<DropDownValueModel> diseaseList = [];
   List<String> selectedDiseaseList = [];
   TextEditingController controller = TextEditingController();
+  bool isLoading = true;
 
   updateData() {
     widget.updateData(selectedDiseaseList);
@@ -43,6 +44,25 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
     super.initState();
     uid = auth.currentUser!.uid;
     initDiseaseList();
+    getDetails();
+  }
+
+  getDetails() async {
+    try {
+      final data = await firestore.collection('Patients').doc(uid).collection(
+          'Medical History').get();
+        selectedDiseaseList.clear();
+        for (var disease in data.docs) {
+          selectedDiseaseList.add(disease['disease']);
+        }
+    }catch(e){
+      setState(() {
+        isLoading = false;
+      });
+    }
+    setState(() {
+      isLoading = false;
+    });
   }
 
   initDiseaseList(){
@@ -65,7 +85,7 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
     Size size = MediaQuery.of(context).size;
 
     return Container(
-      child: SingleChildScrollView(
+      child: isLoading ? Center(child: CircularProgressIndicator(color: kPrimaryColor,),) : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

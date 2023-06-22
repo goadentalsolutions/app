@@ -47,6 +47,9 @@ class _ManageAppointmentsScreenState extends State<ManageAppointmentsScreen> {
       //   if (app['patientName'] == data['patientName'])
       //     pm = GetPatientDetails().get(data);
       // }
+      if (DateTime
+          .now()
+          .millisecondsSinceEpoch < double.parse(app['startTimeInMil'])){
       appList.add(AppointmentCard(
         size: MediaQuery.of(context).size,
         patientName: app['patientName'],
@@ -76,6 +79,7 @@ class _ManageAppointmentsScreenState extends State<ManageAppointmentsScreen> {
             });
         },
       ));
+      }
     }
     appList.sort((a, b) => a.appId.compareTo(b.appId));
     setState(() {});

@@ -37,7 +37,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseStorage storage = FirebaseStorage.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
-  String uid = '';
+  String uid = '', actualUrl = '';
   UploadTask? uploadTask;
   var data1, data2;
   List<String> data3 = [];
@@ -97,13 +97,19 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       }
 
       String url = '';
-      if (fi != null) {
-        url = await uploadImage();
-        await firestore.collection('Patients').doc(uid).set({
-          'profileUrl': url,
-        }, SetOptions(merge: true));
+      if (fi != null && actualUrl == '') {
+        print('ewaccc');
+        try {
+          url = await uploadImage();
+          await firestore.collection('Patients').doc(uid).set({
+            'profileUrl': url,
+          }, SetOptions(merge: true));
+        }catch(e){
+          print(e);
+        }
       }
-      else{
+      else if(fi == null && actualUrl == ''){
+        print('ewacascc');
         await firestore.collection('Patients').doc(uid).set({
           'profileUrl': '',
         }, SetOptions(merge: true));
@@ -186,9 +192,10 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                             print(data2);
                           });
                         },),
-                        AddPatientScreen3(updateData: (file){
+                        AddPatientScreen3(updateData: (file, url){
                           setState(() {
                             fi = file;
+                            actualUrl = url;
                           });
                         },),
                         AddPatientScreen4(updateData: (List<String> data){

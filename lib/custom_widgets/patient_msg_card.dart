@@ -46,7 +46,7 @@ class PatientMsgCard extends StatelessWidget {
                       'Notification from Dr. ${pmm.docName}',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    Text('at 8:00 AM', style: TextStyle(fontSize: 12),),
+                    Text('at ${pmm.time}', style: TextStyle(fontSize: 12),),
                   ],
                 ),
               ),

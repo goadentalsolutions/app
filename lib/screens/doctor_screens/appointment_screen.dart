@@ -33,9 +33,10 @@ import '../patient_screens/patient_details_screen.dart';
 import 'package:http/http.dart' as http;
 
 class AppointmentScreen extends StatefulWidget {
-  AppointmentScreen({required this.am, this.itemNo = 0});
+  AppointmentScreen({required this.am, this.itemNo = 0, this.status = 'normal'});
   AppModel am;
   int itemNo;
+  String status;
 
   @override
   State<AppointmentScreen> createState() => _AppointmentScreenState();
@@ -240,6 +241,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'appId': widget.am.appId,
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
+      'month': widget.am.month,
     });
 
     //uploading Treatment Plans
@@ -262,6 +264,48 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         'id': plan.id,
       });
     }
+
+    //uploading to doctor's history
+    await firestore
+        .collection('Doctors')
+        .doc(widget.am.doctorUid)
+        .collection('History')
+        .doc(nodeId)
+        .set({
+      'patientName': widget.am.patientName,
+      'doctorName': widget.am.doctorName,
+      'date': widget.am.date,
+      'week': widget.am.week,
+      'patientUid': widget.am.patientUid,
+      'doctorUid': widget.am.doctorUid,
+      'time': widget.am.time,
+      'appId': widget.am.appId,
+      'status' : 'Pending',
+      'startTimeInMil': widget.am.startTimeInMil,
+      'endTimeInMil': widget.am.endTimeInMil,
+      'month': widget.am.month,
+    });
+
+    //uploading to patient's history
+    await firestore
+        .collection('Patients')
+        .doc(widget.am.patientUid)
+        .collection('History')
+        .doc(nodeId)
+        .set({
+      'patientName': widget.am.patientName,
+      'doctorName': widget.am.doctorName,
+      'date': widget.am.date,
+      'week': widget.am.week,
+      'patientUid': widget.am.patientUid,
+      'doctorUid': widget.am.doctorUid,
+      'time': widget.am.time,
+      'status' : 'Pending',
+      'appId': widget.am.appId,
+      'startTimeInMil': widget.am.startTimeInMil,
+      'endTimeInMil': widget.am.endTimeInMil,
+      'month': widget.am.month,
+    });
 
     //uploading Prescriptions
     for (var pre in pmList) {

@@ -26,19 +26,19 @@ import '../../custom_widgets/treatment_plan_input_card.dart';
 import '../../custom_widgets/treatment_text_field.dart';
 import '../../models/image_model.dart';
 import '../../models/prescription_model.dart';
-import '../patient_screens/patient_details_screen.dart';
+import 'patient_details_screen.dart';
 import 'package:http/http.dart' as http;
 
-class ViewAppointmentScreen extends StatefulWidget {
-  ViewAppointmentScreen({required this.am, this.itemNo = 0});
+class PatientViewAppointmentScreen extends StatefulWidget {
+  PatientViewAppointmentScreen({required this.am, this.itemNo = 0});
   AppModel am;
   int itemNo;
 
   @override
-  State<ViewAppointmentScreen> createState() => _ViewAppointmentScreenState();
+  State<PatientViewAppointmentScreen> createState() => _PatientViewAppointmentScreenState();
 }
 
-class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
+class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScreen> {
   List<TreatmentModel> tmList = [];
   List<PrescriptionModel> pmList = [];
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -482,6 +482,7 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
                           time: widget.am.time,
                           doctorName: widget.am.doctorName,
                           pm: widget.am.pm,
+                          status: 'patienthomescreen',
                           month: widget.am.month,
                           doctorUid: uid,
                           patientUid: widget.am.patientUid,
@@ -498,52 +499,10 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: 16,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            IconText(
-                              text: 'Treatment Plan',
-                              icon: Icons.add,
-                              func: () {
-                                showTreatmentInputCard();
-                              },
-                            ),
-                            IconText(
-                              text: 'Prescription',
-                              icon: Icons.add,
-                              func: () {
-                                showPrescriptionInputCard();
-                              },
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            IconText(
-                              text: 'Note',
-                              icon: Icons.add,
-                              func: () {
-                                showNoteCard();
-                              },
-                            ),
-                            IconText(
-                              text: 'File',
-                              icon: Icons.add,
-                              func: () {
-                                showFileCard(size);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    (imList.isEmpty && tmList.isEmpty && pmList.isEmpty && note.isEmpty) ? SizedBox(height: 100,) : Container(),
+                    (imList.isEmpty && tmList.isEmpty && pmList.isEmpty && note.isEmpty) ? Center(
+                      child: Text('Not much data here'),
+                    ) : Container(),
                     SizedBox(
                       height: !(tmList.isEmpty) ? 20 : 0,
                     ),
@@ -675,21 +634,6 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
                     ),
                   ],
                 ),
-              ),
-              Align(
-                alignment: AlignmentDirectional.bottomCenter,
-                child: CustomButton(
-                    text: 'SAVE CHANGES',
-                    isLoading: isUploading,
-                    loadingWidget: Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    ),
-                    backgroundColor: kPrimaryColor,
-                    onPressed: () {
-                      if (!isUploading) uploadData();
-                    }),
               ),
             ],
           ),

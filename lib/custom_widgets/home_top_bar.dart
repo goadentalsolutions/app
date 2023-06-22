@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
 import 'package:lottie/lottie.dart';
 
 import '../constants.dart';
@@ -43,7 +44,9 @@ class HomeTopBar extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                       fontSize: 24),
                 )),
-          ) : CircleAvatar(backgroundImage: CachedNetworkImageProvider(profileUrl),),
+          ) : InkWell(child: CircleAvatar(backgroundImage: CachedNetworkImageProvider(profileUrl),), onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen()));
+          }),
         ],
       ),
     );

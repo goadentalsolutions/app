@@ -22,27 +22,14 @@ class AddPatientScreen3 extends StatefulWidget {
 
 class _AddPatientScreen3State extends State<AddPatientScreen3> {
 
-  String phone1 = '', phone2 = '', language = '', email = '', streetAddress = '', locality = '', city = '', pincode = '';
   Map<String, String>? data;
   File? fi;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseStorage storage = FirebaseStorage.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   String uid = '';
-
-  updateData(){
-    data = {
-      'phoneNumber1' : phone1,
-      'phoneNumber2' : phone2,
-      'language' : language,
-      'email' : email,
-      'streetAddress' : streetAddress,
-      'locality' : locality,
-      'city' : city,
-      'pincode' : pincode,
-    };
-    widget.updateData(data);
-  }
+  String url = '';
+  bool isLoading = true;
 
   pickImage() async {
     final image = await ImagePicker.platform.pickImage(source: ImageSource.gallery);
@@ -53,26 +40,36 @@ class _AddPatientScreen3State extends State<AddPatientScreen3> {
       setState(() {
         fi = File(image.path);
       });
-      widget.updateData(fi);
+      widget.updateData(fi, url);
     }
   }
 
-  uploadImage() async {
-    try {
-      await storage.ref().child('profiles').child(DateTime.now().millisecondsSinceEpoch.toString()).putFile(fi!).whenComplete(() {
-        print('hello moto');
-      });
-    }
-    catch(e){
-      print(e);
-    }
-  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     uid = auth.currentUser!.uid;
+    getDetails();
+  }
+
+  getDetails() async {
+    setState(() {
+      isLoading = true;
+    });
+    final data = await firestore.collection('Patients').doc(uid).get();
+    try {
+      url = data['profileUrl'];
+    }catch(e){
+      print(e);
+      setState(() {
+        isLoading = false;
+      });
+    }
+    setState(() {
+      widget.updateData(fi, url);
+      isLoading = false;
+    });
   }
 
   @override
@@ -80,7 +77,7 @@ class _AddPatientScreen3State extends State<AddPatientScreen3> {
     Size size = MediaQuery.of(context).size;
     
     return Container(
-      child: SingleChildScrollView(
+      child: isLoading ? Center(child: CircularProgressIndicator(color: kPrimaryColor,),) : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -103,7 +100,7 @@ class _AddPatientScreen3State extends State<AddPatientScreen3> {
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kGrey), color: kBackgroundColor),
                 child: Padding(
                   padding: EdgeInsets.all(16),
-                  child: (fi == null) ? SvgPicture.asset('svgs/file.svg') : Image.file(fi!, fit: BoxFit.cover,),
+                  child: (fi == null && url == '') ? SvgPicture.asset('svgs/file.svg') : (url == '') ? Image.file(fi!, fit: BoxFit.cover,) : Image.network(url, fit: BoxFit.cover),
                 ),
               ),
             ),
