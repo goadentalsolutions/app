@@ -275,6 +275,8 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
                             ),
                             DropDownTextField(
                               dropDownList: doctorList,
+                              enableSearch: true,
+                              searchDecoration: InputDecoration(hintText: 'Search'),
                               onChanged: (value) {
                                 setState(() {
                                   DropDownValueModel val = value;

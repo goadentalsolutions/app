@@ -12,19 +12,11 @@ class  GetPatientDetails{
         gender: data['gender'],
         city: data['city'],
         age: data['age'],
-        aadharId: data['aadharId'],
-        anniversary: data['anniversary'],
-        bloodGrp: data['bloodGrp'],
-        language: data['language'],
         locality: data['locality'],
-        phoneNumber2: data['phoneNumber2'],
-        pincode:
-        data['pincode'],
+        pincode: data['pincode'],
         phoneNumber1: data['phoneNumber1'],
         streetAddress: data['streetAddress'],
-        patientId: data['patientId'],
         profileUrl: data['profileUrl'], token: data['token']);
-      print(pm.patientUid+pm.locality+pm.anniversary+pm.dob+pm.token);
     }
     catch(e){
       print(e);

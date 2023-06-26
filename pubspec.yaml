@@ -55,6 +55,13 @@ dependencies:
   firebase_messaging: ^14.6.1
   http: ^0.13.6
   flutter_local_notifications: ^14.1.1
+  sms_autofill: ^2.3.0
+  googleapis: ^11.2.0
+  googleapis_auth: ^1.4.1
+  url_launcher: ^6.1.11
+  alt_sms_autofill: ^1.0.0
+  pin_code_fields: ^8.0.1
+  image_downloader: ^0.31.0
 
 dev_dependencies:
   flutter_test:

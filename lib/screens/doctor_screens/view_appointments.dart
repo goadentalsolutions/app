@@ -59,6 +59,7 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
   List<Widget> notes = [];
   List<Widget> images = [];
   String role = '';
+  List<int> tList = [];
 
   @override
   void initState() {
@@ -124,15 +125,37 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
         .get();
     tmList.clear();
     for (var plan in plans.docs) {
-      tmList.add(TreatmentModel(
-          procedure: plan['procedure'],
-          note: plan['note'],
-          discount: plan['discount'],
-          discountSymbol: plan['discountSymbol'],
-          total: plan['total'],
-          cost: plan['cost'],
-          unit: plan['unit'],
-          id: plan['id']));
+      try {
+        final data = await firestore
+            .collection('Doctors')
+            .doc(uid)
+            .collection('Appointments')
+            .doc(nodeId)
+            .collection('TreatmentPlans')
+            .doc(plan.id)
+            .collection('Tooth List').get();
+
+        for (var tooth in data.docs) {
+          tList.add(tooth['tooth']);
+        }
+
+        try {
+          tmList.add(TreatmentModel(
+              procedure: plan['procedure'],
+              note: plan['note'],
+              discount: plan['discount'],
+              discountSymbol: plan['discountSymbol'],
+              total: plan['total'],
+              cost: plan['cost'],
+              unit: plan['unit'],
+              id: plan['id'],
+              toothList: tList),);
+        }catch(e){
+          continue;
+        }
+      }catch(e){
+        continue;
+      }
     }
     setState(() {});
   }
@@ -255,6 +278,44 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
         'unit': plan.unit,
         'id': plan.id,
       });
+      await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('History')
+          .doc(nodeId)
+          .collection('TreatmentPlans')
+          .doc(plan.id)
+          .set({
+        'procedure': plan.procedure,
+        'note': plan.note,
+        'discount': plan.discount,
+        'discountSymbol': plan.discountSymbol,
+        'cost': plan.cost,
+        'total': plan.total,
+        'unit': plan.unit,
+        'id': plan.id,
+      });
+
+      for(var toothNo in plan.toothList) {
+        await firestore
+            .collection('Doctors')
+            .doc(uid)
+            .collection('Appointments')
+            .doc(nodeId)
+            .collection('TreatmentPlans')
+            .doc(plan.id)
+            .collection('Tooth List')
+            .doc(toothNo.toString()).set({"tooth": toothNo});
+        await firestore
+            .collection('Doctors')
+            .doc(uid)
+            .collection('History')
+            .doc(nodeId)
+            .collection('TreatmentPlans')
+            .doc(plan.id)
+            .collection('Tooth List')
+            .doc(toothNo.toString()).set({"tooth": toothNo});
+      }
     }
 
     //uploading Prescriptions
@@ -263,6 +324,21 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
           .collection('Doctors')
           .doc(uid)
           .collection('Appointments')
+          .doc(nodeId)
+          .collection('Prescription')
+          .doc(pre.id)
+          .set({
+        'dosage': pre.dosage,
+        'drug': pre.drug,
+        'duration': pre.duration,
+        'generalInstruction': pre.generalInstruction,
+        'instruction': pre.instruction,
+        'id': pre.id,
+      });
+      await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('History')
           .doc(nodeId)
           .collection('Prescription')
           .doc(pre.id)
@@ -288,6 +364,16 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
           .set({
         'note': note,
       });
+      await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('History')
+          .doc(nodeId)
+          .collection('Note')
+          .doc('note')
+          .set({
+        'note': note,
+      });
     }
 
     if (file != null) {
@@ -296,6 +382,17 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
           .collection('Doctors')
           .doc(uid)
           .collection('Appointments')
+          .doc(nodeId)
+          .collection('Files')
+          .doc(DateTime.now().millisecondsSinceEpoch.toString())
+          .set({
+        'url': url,
+        'description': des,
+      });
+      await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('History')
           .doc(nodeId)
           .collection('Files')
           .doc(DateTime.now().millisecondsSinceEpoch.toString())
@@ -408,8 +505,17 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
           return PrescriptionInputCard(
             size: size,
             onChanged: (PrescriptionModel data) {
+
+              int a = 0;
+              pmList.forEach((element) {
+                if(element.id == data.id) {
+                  element = data;
+                  a = 1;
+                }
+              });
               setState(() {
-                pmList.add(data);
+                if(a == 0)
+                  pmList.add(data);
               });
             },
             pm: pm,
@@ -429,8 +535,16 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
               child: TreatmentPlanInputCard(
                   size: size,
                   onSubmit: (TreatmentModel tPlan) {
+                    int a = 0;
+                    tmList.forEach((element) {
+                      if(element.id == tPlan.id) {
+                        element = tPlan;
+                        a = 1;
+                      }
+                    });
                     setState(() {
-                      tmList.add(tPlan);
+                      if(a == 0)
+                        tmList.add(tPlan);
                     });
                   },
                   tm: tm),
@@ -594,8 +708,8 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
                     ),
                     !(tmList.isEmpty)
                         ? Container(
-                            height: size.height * 0.18,
-                            width: double.infinity,
+                            height: size.height * 0.2,
+                            width: size.width * 0.8,
                             child: ListView.builder(
                               itemBuilder: (context, index) {
                                 return Padding(

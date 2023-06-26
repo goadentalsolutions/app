@@ -29,8 +29,6 @@ class _AddPatientScreen2State extends State<AddPatientScreen2> {
   updateData(){
     data = {
       'phoneNumber1' : phone1,
-      'phoneNumber2' : phone2,
-      'language' : language,
       'email' : email,
       'streetAddress' : streetAddress,
       'locality' : locality,
@@ -45,14 +43,11 @@ class _AddPatientScreen2State extends State<AddPatientScreen2> {
       setState(() {
         try {
           phone1 = data['phoneNumber1'];
-          phone2 = data['phoneNumber2'];
-          language = data['language'];
           email = data['email'];
           streetAddress = data['streetAddress'];
           locality = data['locality'];
           city = data['city'];
           pincode = data['pincode'];
-          print(phone1);
         }
         catch(e){
           print(e);
@@ -87,55 +82,35 @@ class _AddPatientScreen2State extends State<AddPatientScreen2> {
                 updateData();
               });
             }, inputType: TextInputType.number, inputValue: phone1,),
-            SizedBox(height: 16,),
-            PatientTextField(title: 'Secondary phone no.: ', onChanged: (value){
-              setState(() {
-                phone2 = value;
-                updateData();
-              });
-            }, inputType: TextInputType.number, inputValue: phone2,),
-            SizedBox(height: 16,),
-            PatientDropDown(title: 'Language', list: [
-              DropDownValueModel(name: 'English', value: 'English'),
-              DropDownValueModel(name: 'Hindi', value: 'Hindi'),
-              DropDownValueModel(name: 'Konkani', value: 'Konkani'),
-              DropDownValueModel(name: 'Marathi', value: 'Marathi'),
-            ], onChanged: (value){
-              DropDownValueModel val = value;
-               setState(() {
-                language = val.name;
-                updateData();
-              });
-            }, hintText: language,),
-            SizedBox(height: 16,),
+            SizedBox(height: 32,),
             PatientTextField(title: 'Email Address', inputType: TextInputType.emailAddress, onChanged: (value){
               setState(() {
                 email = value;
                 updateData();
               });
             }, inputValue: email,),
-            SizedBox(height: 16,),
+            SizedBox(height: 32,),
             PatientTextField(title: 'Street Address: ', onChanged: (value){
               setState(() {
                 streetAddress = value;
                 updateData();
               });
             }, inputValue: streetAddress,),
-            SizedBox(height: 16,),
+            SizedBox(height: 32,),
             PatientTextField(title: 'Locality', onChanged: (value){
               setState(() {
                 locality = value;
                 updateData();
               });
               }, inputValue: locality,),
-            SizedBox(height: 16,),
+            SizedBox(height: 32,),
             PatientTextField(title: 'City', onChanged: (value){
               setState(() {
                 city = value;
                 updateData();
               });
             }, inputValue: city,),
-            SizedBox(height: 16,),
+            SizedBox(height: 32,),
             PatientTextField(title: 'Pincode', inputType: TextInputType.number, onChanged: (value){
               setState(() {
                 pincode = value;

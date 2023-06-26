@@ -8,6 +8,7 @@ import 'package:goa_dental_clinic/classes/alert.dart';
 import 'package:goa_dental_clinic/models/app_model.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/appointment_screen.dart';
+import 'package:goa_dental_clinic/screens/doctor_screens/view_history_appointment.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/patient_view_appointments.dart';
 
 import '../constants.dart';
@@ -183,6 +184,7 @@ class _AppointmentHistoryCardState extends State<AppointmentHistoryCard> {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ViewHistoryAppointment(am: AppModel(patientName: widget.patientName, doctorName: widget.doctorName, date: widget.date, week: widget.week, time: widget.time, doctorUid: widget.doctorUid, patientUid: widget.patientUid, appId: widget.appId, pm: widget.pm, startTimeInMil: widget.startTimeInMil, endTimeInMil: widget.endTimeInMil, month: widget.month))));
         // print(widget.doctorUid);
         // if (widget.status == 'patienthomescreen')
         //   Navigator.push(

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,10 +11,15 @@ import 'package:goa_dental_clinic/custom_widgets/custom_button.dart';
 import 'package:goa_dental_clinic/models/app_model.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/appointment_screen.dart';
+import 'package:googleapis/calendar/v3.dart' as cal;
+import 'package:googleapis_auth/auth.dart';
+import 'package:googleapis_auth/auth_io.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../classes/date_time_parser.dart';
 import '../../classes/meeting_data_source.dart';
+
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({Key? key}) : super(key: key);
@@ -36,6 +43,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   var dataSource;
   bool isLoading = true;
   List<Appointment> meetings = [];
+  var _credentials, _clientID ;
+  static const _scopes = const [cal.CalendarApi.calendarScope];
 
   @override
   void initState() {
@@ -45,7 +54,68 @@ class _CalendarScreenState extends State<CalendarScreen> {
     getDoctors();
     getPatients();
     getAppointments();
+    createCredentials();
     // cell();
+  }
+
+  createCredentials(){
+    // if (Theme.of(context).platform == TargetPlatform.android) {
+      _credentials = new ClientId(
+          "63175124233-l6vpv8a6pumkt9hvd6liamt2l20tv3qf.apps.googleusercontent.com",
+          "");
+      _clientID = '63175124233-l6vpv8a6pumkt9hvd6liamt2l20tv3qf.apps.googleusercontent.com';
+    // } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+    //   _credentials = new ClientId(
+    //       "63175124233-s577tq06s59rb5iclv5g447sf8biq32s.apps.googleusercontent.com",
+    //       "");
+    //   _clientID = '63175124233-s577tq06s59rb5iclv5g447sf8biq32s.apps.googleusercontent.com';
+    // }
+  }
+
+  creatingEvent(DateTime startTime, DateTime endTime){
+    cal.Event event = cal.Event(); // Create object of event
+
+    cal.EventDateTime start = new cal.EventDateTime(); //Setting start time
+    start.dateTime = startTime;
+    start.timeZone = "GMT+05:00";
+    event.start = start;
+
+
+    cal.EventDateTime end = new cal.EventDateTime(); //setting end time
+    end.timeZone = "GMT+05:00";
+    end.dateTime = endTime;
+    event.end = end;
+
+    insertEvent(event);
+  }
+
+  insertEvent(event){
+    try {
+      clientViaUserConsent(_credentials, _scopes, prompt).then((AuthClient client){
+        var calendar = cal.CalendarApi(client);
+        String calendarId = "primary";
+        calendar.events.insert(event,calendarId).then((value) {
+          print("ADDEDDD_________________${value.status}");
+          if (value.status == "confirmed") {
+            log('Event added in google calendar');
+          } else {
+            log("Unable to add event in google calendar");
+          }
+        });
+      });
+    } catch (e) {
+      log('Error creating event $e');
+    }
+  }
+
+
+  void prompt(String url) async {
+
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   getAppointments() async {
@@ -151,6 +221,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           // },
           onTap: (details) {
             var parser = DateTimeParser(details.date.toString());
+            // creatingEvent(details!.date! , DateTime.now());
             appId = DateTime.parse(details.date.toString()).millisecondsSinceEpoch.toString();
             setState(() {
               formattedTime = parser.getFormattedTime();
@@ -233,6 +304,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                             DropDownTextField(
                               dropDownList: patientList,
+                              enableSearch: true,
+                              searchDecoration: InputDecoration(hintText: 'Search'),
                               onChanged: (value) {
                                 setState(() {
                                   DropDownValueModel val = value;

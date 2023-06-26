@@ -55,7 +55,6 @@ class _DoctorMessageScreenState extends State<DoctorMessageScreen> {
         print(data['patientName'] + data['patientName']);
         if (amm.patientName == data['patientName']) {
           pm = GetPatientDetails().get(data);
-          print(pm?.language);
           break;
         }
       }

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:goa_dental_clinic/classes/alert.dart';
@@ -54,32 +55,30 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         try {
           await firestore.collection('Patients').doc(uid).set({
             'patientName': data1['patientName'],
-            'patientId': data1['patientId'],
-            'aadharId': data1['aadharId'],
+            // 'patientId': data1['patientId'],
+            // 'aadharId': data1['aadharId'],
             'gender': data1['gender'],
             'dob': data1['dob'],
             'age': data1['age'],
-            'anniversary': data1['anniversary'],
-            'bloodGrp': data1['bloodGrp'],
+            // 'anniversary': data1['anniversary'],
+            // 'bloodGrp': data1['bloodGrp'],
             'patientUid': uid,
           }, SetOptions(merge: true));
         }
         catch (e) {
-          print('$e ada');
+          print('$e');
         }
       }
       if (data2 != null) {
-        print('cool2 $uid');
         try {
           await firestore.collection('Patients').doc(uid).set({
             'phoneNumber1': data2['phoneNumber1'],
-            'phoneNumber2': data2['phoneNumber2'],
-            'language': data2['language'],
             'email': data2['email'],
             'streetAddress': data2['streetAddress'],
             'locality': data2['locality'],
             'pincode': data2['pincode'],
             'city': data2['city'],
+            'token': '',
           }, SetOptions(merge: true));
         }
         catch (e) {
@@ -88,7 +87,6 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       }
 
       if (data3.isNotEmpty || data3 != null) {
-        print('reached2');
         for (var disease in data3) {
           await firestore.collection('Patients').doc(uid)
               .collection('Medical History')
@@ -98,7 +96,6 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
 
       String url = '';
       if (fi != null && actualUrl == '') {
-        print('ewaccc');
         try {
           url = await uploadImage();
           await firestore.collection('Patients').doc(uid).set({
@@ -109,7 +106,6 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         }
       }
       else if(fi == null && actualUrl == ''){
-        print('ewacascc');
         await firestore.collection('Patients').doc(uid).set({
           'profileUrl': '',
         }, SetOptions(merge: true));
@@ -117,6 +113,20 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       await firestore.collection('Users').doc(uid).set({
         'setup': 2,
       }, SetOptions(merge: true));
+
+      if(widget.status != 'normal'){
+        await firestore.collection('Users').doc(uid).set(
+            {
+              'name' : data1['patientName'],
+              'phoneNumber' : data2['phoneNumber1'],
+              'email' : data2['email'],
+              'role' : 'patient',
+              'uid' : uid,
+              'token' : '',
+              'setup' : 2,
+            }
+        );
+      }
 
       setState(() {
         isLoading = false;
@@ -142,11 +152,15 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
     }
   }
 
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    uid = auth.currentUser!.uid;
+    if(widget.status == 'normal')
+      uid = auth.currentUser!.uid;
+    else
+      uid = DateTime.now().millisecondsSinceEpoch.toString();
   }
 
   @override
@@ -161,9 +175,17 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Add Details',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold,),
+                  Row(
+                    children: [
+                      InkWell(child: Icon(Icons.arrow_back_ios_new_outlined, color: Colors.black,), onTap: (){
+                        Navigator.pop(context);
+                      },),
+                      SizedBox(width: 16,),
+                      Text(
+                        'Add Details',
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold,),
+                      ),
+                    ],
                   ),
                   SizedBox(
                     height: 16,
@@ -185,7 +207,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                             data1 = data;
                             print(data1);
                           });
-                        },),
+                        }, status: widget.status,),
                         AddPatientScreen2(updateData: (Map<String, String> data){
                           setState(() {
                             data2 = data;

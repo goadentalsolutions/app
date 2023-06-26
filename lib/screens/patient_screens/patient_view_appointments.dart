@@ -109,14 +109,30 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
 
   getTreatmentPlans() async {
     final plans = await firestore
-        .collection('Patients')
-        .doc(uid)
+        .collection('Doctors')
+        .doc(widget.am.doctorUid)
         .collection('Appointments')
         .doc(nodeId)
         .collection('TreatmentPlans')
         .get();
     tmList.clear();
     for (var plan in plans.docs) {
+
+      List<int> tList = [];
+
+      final data = await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('Appointments')
+          .doc(nodeId)
+          .collection('TreatmentPlans')
+          .doc(plan.id)
+          .collection('Tooth List').get();
+
+      for(var tooth in data.docs){
+        tList.add(tooth['tooth']);
+      }
+
       tmList.add(TreatmentModel(
           procedure: plan['procedure'],
           note: plan['note'],
@@ -125,15 +141,15 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
           total: plan['total'],
           cost: plan['cost'],
           unit: plan['unit'],
-          id: plan['id']));
+          id: plan['id'], toothList: tList));
     }
     setState(() {});
   }
 
   getPrescriptionS() async {
     final pre = await firestore
-        .collection('Patients')
-        .doc(uid)
+        .collection('Doctors')
+        .doc(widget.am.doctorUid)
         .collection('Appointments')
         .doc(nodeId)
         .collection('Prescription')
@@ -154,8 +170,8 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
   getNote() async {
     try {
       final nt = await firestore
-          .collection('Patients')
-          .doc(uid)
+          .collection('Doctors')
+          .doc(widget.am.doctorUid)
           .collection('Appointments')
           .doc(nodeId)
           .collection('Note')
@@ -171,8 +187,8 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
 
   getImages() async {
     final images = await firestore
-        .collection('Patients')
-        .doc(uid)
+        .collection('Doctors')
+        .doc(widget.am.doctorUid)
         .collection('Appointments')
         .doc(nodeId)
         .collection('Files')

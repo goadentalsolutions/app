@@ -1,6 +1,6 @@
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
-import 'package:goa_dental_clinic/custom_widgets/tooth_selection_container.dart';
+import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
 import '../constants.dart';
 import '../models/treatment_model.dart';
 import 'custom_button.dart';
@@ -23,6 +23,8 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
     DropDownValueModel(name: kRupee, value: kRupee)
   ];
 
+  List<int> toothList = [];
+
   TextEditingController totalController = TextEditingController();
 
   TreatmentModel tm = TreatmentModel(
@@ -34,6 +36,7 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
     cost: 0,
     unit: 0,
     id: DateTime.now().millisecondsSinceEpoch.toString(),
+    toothList: [],
   );
   bool isPercentage = true;
 
@@ -50,6 +53,21 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
         totalController.text = ((tm.unit * tm.cost) - tm.discount).toString();
       }
     });
+  }
+
+  showToothSelectionCard(size) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return ToothSelectionWidget(
+              numberOfTeeth: 32,
+              tList: tm.toothList,
+              onDone: (List<int> tList) {
+                setState(() {
+                  tm.toothList = tList;
+                });
+              });
+        });
   }
 
   @override
@@ -262,6 +280,10 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
                   hintText: 'Add Note',
                   inputValue: tm.note,
                 ),
+                SizedBox(height: 16,),
+                InkWell(child: Text('Add Teeth', style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold, fontSize: 14),), onTap: (){
+                  showToothSelectionCard(MediaQuery.of(context).size);
+                },),
                 SizedBox(
                   height: 16,
                 ),

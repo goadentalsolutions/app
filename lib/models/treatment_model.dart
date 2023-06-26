@@ -4,6 +4,7 @@ class TreatmentModel {
   String procedure, note, discountSymbol, id;
   double cost, discount, total;
   int unit;
+  List<int> toothList;
 
   TreatmentModel({
     required this.procedure,
@@ -14,5 +15,6 @@ class TreatmentModel {
     required this.cost,
     required this.unit,
     required this.id,
+    required this.toothList,
   });
 }

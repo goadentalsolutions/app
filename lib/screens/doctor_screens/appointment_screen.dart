@@ -20,6 +20,7 @@ import 'package:goa_dental_clinic/models/app_model.dart';
 import 'package:goa_dental_clinic/models/treatment_model.dart';
 import 'package:goa_dental_clinic/custom_widgets/note_input_card.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/nav_screen.dart';
+import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
 
 import '../../classes/alert.dart';
 import '../../classes/pref.dart';
@@ -33,7 +34,8 @@ import '../patient_screens/patient_details_screen.dart';
 import 'package:http/http.dart' as http;
 
 class AppointmentScreen extends StatefulWidget {
-  AppointmentScreen({required this.am, this.itemNo = 0, this.status = 'normal'});
+  AppointmentScreen(
+      {required this.am, this.itemNo = 0, this.status = 'normal'});
   AppModel am;
   int itemNo;
   String status;
@@ -129,6 +131,22 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         .get();
     tmList.clear();
     for (var plan in plans.docs) {
+
+      List<int> tList = [];
+
+      final data = await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('Appointments')
+          .doc(nodeId)
+          .collection('TreatmentPlans')
+          .doc(plan.id)
+          .collection('Tooth List').get();
+
+      for(var tooth in data.docs){
+        tList.add(tooth as int);
+      }
+
       tmList.add(TreatmentModel(
           procedure: plan['procedure'],
           note: plan['note'],
@@ -137,7 +155,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           total: plan['total'],
           cost: plan['cost'],
           unit: plan['unit'],
-          id: plan['id']));
+          id: plan['id'], toothList: tList));
+
     }
     setState(() {});
   }
@@ -264,6 +283,47 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         'id': plan.id,
       });
     }
+      for (var plan in tmList) {
+        await firestore
+            .collection('Doctors')
+            .doc(uid)
+            .collection('History')
+            .doc(nodeId)
+            .collection('TreatmentPlans')
+            .doc(plan.id)
+            .set({
+          'procedure': plan.procedure,
+          'note': plan.note,
+          'discount': plan.discount,
+          'discountSymbol': plan.discountSymbol,
+          'cost': plan.cost,
+          'total': plan.total,
+          'unit': plan.unit,
+          'id': plan.id,
+        });
+
+      for(var toothNo in plan.toothList) {
+        await firestore
+            .collection('Doctors')
+            .doc(uid)
+            .collection('Appointments')
+            .doc(nodeId)
+            .collection('TreatmentPlans')
+            .doc(plan.id)
+            .collection('Tooth List')
+            .doc(toothNo.toString()).set({"tooth" : toothNo});
+
+        await firestore
+            .collection('Doctors')
+            .doc(uid)
+            .collection('History')
+            .doc(nodeId)
+            .collection('TreatmentPlans')
+            .doc(plan.id)
+            .collection('Tooth List')
+            .doc(toothNo.toString()).set({"tooth" : toothNo});
+      }
+    }
 
     //uploading to doctor's history
     await firestore
@@ -280,7 +340,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'doctorUid': widget.am.doctorUid,
       'time': widget.am.time,
       'appId': widget.am.appId,
-      'status' : 'Pending',
+      'status': 'Pending',
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
       'month': widget.am.month,
@@ -300,7 +360,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'patientUid': widget.am.patientUid,
       'doctorUid': widget.am.doctorUid,
       'time': widget.am.time,
-      'status' : 'Pending',
+      'status': 'Pending',
       'appId': widget.am.appId,
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
@@ -313,6 +373,23 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           .collection('Doctors')
           .doc(uid)
           .collection('Appointments')
+          .doc(nodeId)
+          .collection('Prescription')
+          .doc(pre.id)
+          .set({
+        'dosage': pre.dosage,
+        'drug': pre.drug,
+        'duration': pre.duration,
+        'generalInstruction': pre.generalInstruction,
+        'instruction': pre.instruction,
+        'id': pre.id,
+      });
+    }
+    for (var pre in pmList) {
+      await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('History')
           .doc(nodeId)
           .collection('Prescription')
           .doc(pre.id)
@@ -338,6 +415,16 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           .set({
         'note': note,
       });
+      await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('History')
+          .doc(nodeId)
+          .collection('Note')
+          .doc('note')
+          .set({
+        'note': note,
+      });
     }
 
     if (file != null) {
@@ -346,6 +433,17 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           .collection('Doctors')
           .doc(uid)
           .collection('Appointments')
+          .doc(nodeId)
+          .collection('Files')
+          .doc(DateTime.now().millisecondsSinceEpoch.toString())
+          .set({
+        'url': url,
+        'description': des,
+      });
+      await firestore
+          .collection('Doctors')
+          .doc(uid)
+          .collection('History')
           .doc(nodeId)
           .collection('Files')
           .doc(DateTime.now().millisecondsSinceEpoch.toString())
@@ -366,14 +464,20 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
   sendNotificationToPatient() async {
     String msgId = DateTime.now().millisecondsSinceEpoch.toString();
-    firestore.collection('Patients').doc(widget.am.patientUid).collection('Messages').doc(msgId).set({
-      'msg' : 'Scheduled appointment on ${widget.am}(${widget.am.week}) at ${widget.am.time}.',
-      'msgId' : msgId,
-      'docUid' : uid,
-      'docName' : widget.am.doctorName,
-      'date' : widget.am.date,
-      'week' : widget.am.week,
-      'time' : widget.am.time,
+    firestore
+        .collection('Patients')
+        .doc(widget.am.patientUid)
+        .collection('Messages')
+        .doc(msgId)
+        .set({
+      'msg':
+          'Scheduled appointment on ${widget.am}(${widget.am.week}) at ${widget.am.time}.',
+      'msgId': msgId,
+      'docUid': uid,
+      'docName': widget.am.doctorName,
+      'date': widget.am.date,
+      'week': widget.am.week,
+      'time': widget.am.time,
     });
   }
 
@@ -409,8 +513,12 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       print(e);
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data saved !'), backgroundColor: Colors.green,));
-    Navigator.push(context, MaterialPageRoute(builder: (context) => NavScreen(screenNo: 2)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Data saved !'),
+      backgroundColor: Colors.green,
+    ));
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => NavScreen(screenNo: 2)));
   }
 
   Future<String> uploadImage() async {
@@ -463,11 +571,19 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
               child: TreatmentPlanInputCard(
                   size: size,
                   onSubmit: (TreatmentModel tPlan) {
+                    int a = 0;
+                    tmList.forEach((element) {
+                      if(element.id == tPlan.id) {
+                        element = tPlan;
+                        a = 1;
+                      }
+                    });
                     setState(() {
+                      if(a == 0)
                       tmList.add(tPlan);
                     });
                   },
-                  tm: tm),
+                  tm: tm,),
             ),
           );
         });
@@ -502,6 +618,20 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
               });
             },
           );
+        });
+  }
+
+  showToothSelectionCard(size) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return ToothSelectionWidget(
+              numberOfTeeth: 32,
+              onDone: (List<int> toothList) {
+                toothList.forEach((element) {
+                  print(element);
+                });
+              });
         });
   }
 
@@ -559,7 +689,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                             autoShowCards(itemNo, context);
                           },
                           appId: widget.am.appId,
-                          refresh: (appId){
+                          refresh: (appId) {
                             Navigator.pop(context);
                           },
                         ),
@@ -626,29 +756,31 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     SizedBox(
                       height: 8,
                     ),
-                    !(tmList.isEmpty) ? Container(
-                      height: size.height * 0.18,
-                      width: double.infinity,
-                      child: ListView.builder(
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: EdgeInsets.only(right: 8),
-                            child: TreatmentPlanCard(
-                              tm: tmList[index],
-                              size: size,
-                              editFunc: (TreatmentModel tm) {
-                                autoShowCards(1, context, tm: tm);
+                    !(tmList.isEmpty)
+                        ? Container(
+                      height: size.height * 0.2,
+                      width: size.width * 0.8,
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: EdgeInsets.only(right: 8),
+                                  child: TreatmentPlanCard(
+                                    tm: tmList[index],
+                                    size: size,
+                                    editFunc: (TreatmentModel tm) {
+                                      autoShowCards(1, context, tm: tm);
+                                    },
+                                    addFunc: () {
+                                      showTreatmentInputCard(tm: null);
+                                    },
+                                  ),
+                                );
                               },
-                              addFunc: () {
-                                showTreatmentInputCard(tm: null);
-                              },
+                              itemCount: tmList.length,
+                              scrollDirection: Axis.horizontal,
                             ),
-                          );
-                        },
-                        itemCount: tmList.length,
-                        scrollDirection: Axis.horizontal,
-                      ),
-                    ) : Container(),
+                          )
+                        : Container(),
                     SizedBox(
                       height: 16,
                     ),
@@ -664,25 +796,27 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     SizedBox(
                       height: 8,
                     ),
-                    !(pmList.isEmpty) ? Container(
-                      height: size.height * 0.18,
-                      width: double.infinity,
-                      child: ListView.builder(
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: EdgeInsets.only(right: 8),
-                            child: PrescriptionCard(
-                              pm: pmList[index],
-                              editFunc: (PrescriptionModel pm) {
-                                showPrescriptionInputCard(pm: pm);
+                    !(pmList.isEmpty)
+                        ? Container(
+                            height: size.height * 0.18,
+                            width: double.infinity,
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: EdgeInsets.only(right: 8),
+                                  child: PrescriptionCard(
+                                    pm: pmList[index],
+                                    editFunc: (PrescriptionModel pm) {
+                                      showPrescriptionInputCard(pm: pm);
+                                    },
+                                  ),
+                                );
                               },
+                              itemCount: pmList.length,
+                              scrollDirection: Axis.horizontal,
                             ),
-                          );
-                        },
-                        itemCount: pmList.length,
-                        scrollDirection: Axis.horizontal,
-                      ),
-                    ) : Container(),
+                          )
+                        : Container(),
                     SizedBox(
                       height: 16,
                     ),
@@ -698,9 +832,11 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     SizedBox(
                       height: 8,
                     ),
-                    !(note.isEmpty) ? Text(
-                      '$note',
-                    ) : Container(),
+                    !(note.isEmpty)
+                        ? Text(
+                            '$note',
+                          )
+                        : Container(),
                     SizedBox(
                       height: 16,
                     ),
@@ -716,19 +852,21 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     SizedBox(
                       height: 8,
                     ),
-                    (imList.isNotEmpty) ? Container(
-                      height: size.height * 0.4,
-                      child: ListView.builder(
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ImageDesContainer(im: imList[index]),
-                          );
-                        },
-                        itemCount: imList.length,
-                        scrollDirection: Axis.horizontal,
-                      ),
-                    ) : Container(),
+                    (imList.isNotEmpty)
+                        ? Container(
+                            height: size.height * 0.4,
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ImageDesContainer(im: imList[index]),
+                                );
+                              },
+                              itemCount: imList.length,
+                              scrollDirection: Axis.horizontal,
+                            ),
+                          )
+                        : Container(),
                     Container(
                       height: 100,
                     ),
@@ -747,8 +885,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     ),
                     backgroundColor: kPrimaryColor,
                     onPressed: () {
-                      if(!isUploading)
-                      uploadData();
+                      if (!isUploading) uploadData();
                     }),
               ),
             ],

@@ -31,12 +31,13 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
   String uid = '';
   List<DropDownValueModel> diseaseList = [];
   List<String> selectedDiseaseList = [];
-  TextEditingController controller = TextEditingController();
   bool isLoading = true;
-
+  TextEditingController controller = TextEditingController();
+  
   updateData() {
     widget.updateData(selectedDiseaseList);
   }
+
 
   @override
   void initState() {

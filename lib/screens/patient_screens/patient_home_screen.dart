@@ -81,9 +81,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
       for (var patient in patients.docs) {
         try {
-          if (DateTime
-              .now()
-              .millisecondsSinceEpoch < double.parse(patient['startTimeInMil']))
+          // if (DateTime
+          //     .now()
+          //     .millisecondsSinceEpoch < double.parse(patient['startTimeInMil']))
           appList.add(
             AppointmentCard(
               size: MediaQuery

@@ -90,6 +90,9 @@ class _AppointmentHistoryState extends State<AppointmentHistory> {
                         month: app['month'],
                         endTimeInMil: app['endTimeInMil'],
                         refresh: () {}));
+
+                    appList.sort((a, b) => b.appId.compareTo(a.appId));
+
                   } catch (e) {
                     print(e);
                     continue;

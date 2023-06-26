@@ -25,13 +25,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
     // auth.signOut();
 
     nextScreen();
   }
 
   nextScreen() async {
-
     await Timer(Duration(seconds: 2), () {
       if(auth.currentUser == null)
       Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));

@@ -43,6 +43,8 @@
 	<string>Microphone</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photo</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Add photo</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

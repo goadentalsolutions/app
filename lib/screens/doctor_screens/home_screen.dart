@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/classes/get_patient_details.dart';
 import 'package:goa_dental_clinic/constants.dart';
+import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,9 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if(DateTime.fromMillisecondsSinceEpoch(int.parse(patient['appId'])).day == DateTime.now().day) {
         final datas = await firestore.collection('Patients').get();
         PatientModel? pm;
-        if (DateTime
-            .now()
-            .millisecondsSinceEpoch < double.parse(patient['startTimeInMil'])) {
+        // if (DateTime
+        //     .now()
+        //     .millisecondsSinceEpoch < double.parse(patient['startTimeInMil'])) {
           for (var data in datas.docs) {
             if (patient['patientName'] == data['patientName'])
               pm = GetPatientDetails().get(data);
@@ -95,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             pm: pm,));
-        }
+        // }
       }
     }
     appList.sort((a, b) => a.appId.compareTo(b.appId));
@@ -139,50 +140,75 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            alignment: AlignmentDirectional.bottomEnd,
             children: [
-              HomeTopBar(
-                initials: GetInitials(name).get(),
-                primaryText: '$name',
-              ),
-              SizedBox(
-                height: 16,
-              ),
-              LongImageContainer(
-                  size: MediaQuery.of(context).size,
-                  imgAddress: 'svgs/doctors.svg',
-                  text: 'All Appointments',
-                  onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ManageAppointmentsScreen()));
-                  }
-              ),
-              SizedBox(
-                height: 16,
-              ),
-              Text(
-                'Today\'s Appointments',
-                style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.w500),
-              ),
-              SizedBox(
-                height: 16,
-              ),
-              isLoading ? Expanded(
-                child: Center(
-                  child: CircularProgressIndicator(color: kPrimaryColor),
-                )
-              ):
-              Expanded(
-                child: !(appList.isEmpty) ? ListView.builder(itemBuilder: (context, index){
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  HomeTopBar(
+                    initials: GetInitials(name).get(),
+                    primaryText: '$name',
+                  ),
+                  SizedBox(
+                    height: 16,
+                  ),
+                  LongImageContainer(
+                      size: MediaQuery.of(context).size,
+                      imgAddress: 'svgs/doctors.svg',
+                      text: 'All Appointments',
+                      onPressed: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => ManageAppointmentsScreen()));
+                      }
+                  ),
+                  SizedBox(
+                    height: 16,
+                  ),
+                  Text(
+                    'Today\'s Appointments',
+                    style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                  SizedBox(
+                    height: 16,
+                  ),
+                  isLoading ? Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(color: kPrimaryColor),
+                    )
+                  ):
+                  Expanded(
+                    child: !(appList.isEmpty) ? ListView.builder(itemBuilder: (context, index){
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: appList[index],
-                  );
-                }, itemCount: appList.length,) : Container(
-                  child: Center(
-                    child: Text('No Appointments as of now', style: TextStyle(fontSize: 18, color: kGrey),),
-                    // child: SvgPicture.asset('svgs/doctors.svg', height: MediaQuery.of(context).size.height * 0.3, width: MediaQuery.of(context).size.width * 0.3,),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: appList[index],
+                      );
+                    }, itemCount: appList.length,) : Container(
+                      child: Center(
+                        child: Text('No Appointments as of now', style: TextStyle(fontSize: 18, color: kGrey),),
+                        // child: SvgPicture.asset('svgs/doctors.svg', height: MediaQuery.of(context).size.height * 0.3, width: MediaQuery.of(context).size.width * 0.3,),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: (){
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => ToothSelectionWidget(numberOfTeeth: 32, onToothSelected: (int){
+                  //   print(int);
+                  // })));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen(status: 'not_normal',)));
+                },
+                child: Material(
+                  borderRadius: BorderRadius.circular(12),
+                  elevation: 5,
+                  child: Container(
+                    height: 50,
+                    width: 100,
+                    decoration: BoxDecoration(color: kPrimaryColor, borderRadius: BorderRadius.circular(12),),
+                    child: Center(
+                      child: Text('Add Patient', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),),
+                    ),
                   ),
                 ),
               ),

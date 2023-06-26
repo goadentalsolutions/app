@@ -1,13 +1,17 @@
 import 'dart:convert';
+import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
 import 'package:goa_dental_clinic/screens/register_screen.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:pinput/pinput.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sms_autofill/sms_autofill.dart';
 
 import '../classes/alert.dart';
 import '../classes/pref.dart';
@@ -30,12 +34,37 @@ class _LoginScreenState extends State<LoginScreen> {
   late String verId;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   bool otpLoading = false;
+  late TextEditingController textEditingController1;
+
+  String _comingSms = 'Unknown';
+
+  Future<void> initSmsListener() async {
+
+    String? comingSms;
+    try {
+      comingSms = await AltSmsAutofill().listenForSms;
+    } on PlatformException {
+      comingSms = 'Failed to get Sms.';
+    }
+    if (!mounted) return;
+    setState(() {
+      _comingSms = comingSms!;
+      print("====>Message: ${_comingSms}");
+      print("${_comingSms[32]}");
+      otpController.text = _comingSms[0] + _comingSms[1] + _comingSms[2] + _comingSms[3]
+          + _comingSms[4] + _comingSms[5]; //used to set the code in the message to a string and setting it to a textcontroller. message length is 38. so my code is in string index 32-37.
+    });
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    textEditingController1 = TextEditingController();
+    initSmsListener();
   }
+
+
 
   Future<void> sendCode(BuildContext context) async {
     setState(() {
@@ -69,6 +98,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
   }
+
+  // Future<void> _listenForOTP() async {
+  //   await SmsAutoFill().listenForCode;
+  //   String? code = await SmsAutoFill().getAppSignature;
+  //   if (code != null) {
+  //     setState(() {
+  //       print(code);
+  //       otpController.text = code;
+  //       isVerifyButtonVisible = true;
+  //     });
+  //   }
+  // }
 
   Future<void> verifyCode() async {
     try {
@@ -155,6 +196,12 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    SmsAutoFill().unregisterListener();
+  }
+  @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
 
@@ -226,6 +273,37 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   visible: codeSent,
                 ),
+                // PinCodeTextField(
+                //   appContext: context,
+                //   pastedTextStyle: TextStyle(
+                //     color: Colors.green.shade600,
+                //     fontWeight: FontWeight.bold,
+                //   ),
+                //   length: 6,
+                //   obscureText: false,
+                //   animationType: AnimationType.fade,
+                //   cursorColor: Colors.black,
+                //   animationDuration: Duration(milliseconds: 300),
+                //   enableActiveFill: true,
+                //   controller: textEditingController1,
+                //   keyboardType: TextInputType.number,
+                //   boxShadows: [
+                //     BoxShadow(
+                //       offset: Offset(0, 1),
+                //       color: Colors.black12,
+                //       blurRadius: 10,
+                //     )
+                //   ],
+                //   onCompleted: (v) {
+                //     //do something or move to next screen when code complete
+                //   },
+                //   onChanged: (value) {
+                //     print(value);
+                //     setState(() {
+                //       print('$value');
+                //     });
+                //   },
+                // ),
                 Visibility(
                   child: Pinput(
                     length: 6,
@@ -271,6 +349,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   visible: isVerifyButtonVisible,
                 ),
+
                 SizedBox(
                   height: 16,
                 ),

@@ -12,8 +12,8 @@ import '../../custom_widgets/patient_dropdown.dart';
 import '../../custom_widgets/patient_text_field.dart';
 
 class AddPatientScreen1 extends StatefulWidget {
-  AddPatientScreen1({required this.updateData, this.model});
-  String? model;
+  AddPatientScreen1({required this.updateData, this.status = 'normal'});
+  String status;
   Function updateData;
 
   @override
@@ -36,16 +36,15 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
   String uid = '';
   bool isLoading = false;
   FirebaseAuth auth = FirebaseAuth.instance;
+  TextEditingController ageController = TextEditingController();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     uid = auth.currentUser!.uid;
-    if (widget.model == null) {
-
-    }
-    getName();
+    if(widget.status == 'normal')
+      getName();
     getDetails();
   }
 
@@ -53,11 +52,9 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
     try {
       final data = await firestore.collection('Patients').doc(uid).get();
       setState(() {
-        bloodGrp = data['bloodGrp'];
-        anniversary = data['anniversary'];
-        aadharId = data['aadharId'];
         gender = data['gender'];
         dobController.text = data['dob'];
+        dobController.text = data['age'];
       });
     }
     catch(e){
@@ -86,13 +83,9 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
     setState(() {
       data = {
         'patientName': patientName!,
-        'patientId': patientId!,
-        'aadharId': aadharId!,
         'gender': gender,
-        'anniversary': anniversary!,
         'dob': dob!,
-        'age': age!,
-        'bloodGrp': bloodGrp!,
+        'age': ageController.text,
       };
     });
 
@@ -112,34 +105,9 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
                     patientName = value;
                     updateData();
                   });
-                }, inputValue: patientName.toString(), readOnly: true,),
+                }, inputValue: patientName.toString(), readOnly: (widget.status == 'normal'),),
             SizedBox(
-              height: 16,
-            ),
-            // PatientTextField(
-            //     title: 'Patient ID: ',
-            //     onChanged: (value) {
-            //       setState(() {
-            //         patientId = value;
-            //         updateData();
-            //       });
-            //     }, inputType: TextInputType.number,),
-            // SizedBox(
-            //   height: 16,
-            // ),
-            PatientTextField(
-              title: 'Aadhar ID: ',
-              onChanged: (value) {
-                setState(() {
-                  aadharId = value;
-                  updateData();
-                });
-              },
-              inputType: TextInputType.number,
-              inputValue: aadharId,
-            ),
-            SizedBox(
-              height: 16,
+              height: 32,
             ),
             Row(
               children: [
@@ -178,7 +146,7 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
               ],
             ),
             SizedBox(
-              height: 16,
+              height: 32,
             ),
             Row(
               children: [
@@ -198,16 +166,17 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
                         DateTime? pickedDate = await showDatePicker(
                             context: context,
                             initialDate: DateTime.now(), //get today's date
-                            firstDate:DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                            firstDate:DateTime(1900), //DateTime.now() - not to allow to choose before today.
                             lastDate: DateTime(2101)
                         );
 
                         if (pickedDate != null) {
                         setState(() {
+                          print(pickedDate);
                           dob = DateFormat('yyyy-MM-dd').format(pickedDate!);
                           DateTime dateTime = DateTime(pickedDate!.year,
                               pickedDate!.month, pickedDate!.day);
-                          age = AgeCalculator
+                          ageController.text = AgeCalculator
                               .age(dateTime)
                               .years
                               .toString();
@@ -232,39 +201,39 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
               ],
             ),
             SizedBox(
-              height: 16,
+              height: 32,
             ),
-            PatientTextField(
-                title: 'Anniversary',
-                onChanged: (value) {
-                  setState(() {
-                    anniversary = value;
-                    updateData();
-                  });
-                }, inputValue: anniversary,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Age: ',
+                    style: TextStyle(color: kGrey, fontSize: 16),
+                  ),
+                ),
+                SizedBox(width: 16,),
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    onChanged: (value) {
+                      // widget.onChanged(value);
+                    },
+                    controller: ageController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      hintText: 'Age',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             SizedBox(
               height: 16,
             ),
-            PatientDropDown(
-                title: 'Blood group',
-                hintText: bloodGrp,
-                list: [
-                  DropDownValueModel(name: 'A+', value: 'A+'),
-                  DropDownValueModel(name: 'A-', value: 'A-'),
-                  DropDownValueModel(name: 'B+', value: 'B+'),
-                  DropDownValueModel(name: 'B-', value: 'B-'),
-                  DropDownValueModel(name: 'O+', value: 'O+'),
-                  DropDownValueModel(name: 'O-', value: 'O-'),
-                  DropDownValueModel(name: 'AB+', value: 'AB+'),
-                  DropDownValueModel(name: 'AB-', value: 'AB-'),
-                ],
-                onChanged: (value) {
-                  DropDownValueModel val = value;
-                  setState(() {
-                    bloodGrp = val.name;
-                    updateData();
-                  });
-                }),
           ],
         ),
       ),
