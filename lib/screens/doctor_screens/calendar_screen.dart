@@ -168,9 +168,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final patients = await firestore.collection('Patients').get();
     patientList.clear();
     for (var patient in patients.docs) {
-      patientList.add(DropDownValueModel(
-          name: patient['patientName'], value: patient['patientUid']));
+      // try {
+        patientList.add(DropDownValueModel(
+            name: patient['patientName'], value: patient['patientUid']));
+      // }
+      // catch(e){
+      //   continue;
+      // }
     }
+
+    print("done ${patientList.length}");
+
     setState(() {});
   }
 
@@ -181,8 +189,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
     PatientModel? pm;
     setState(() {
       for(var data in datas.docs) {
-        if(patientName == data['patientName'])
-        pm = GetPatientDetails().get(data);
+        try {
+          if (patientName == data['patientName'])
+            pm = GetPatientDetails().get(data);
+        }
+        catch(e){
+          print('jhihuhi');
+          continue;
+        }
       }
     });
     return pm;

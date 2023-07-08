@@ -144,9 +144,15 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
     final doctors = await firestore.collection('Doctors').get();
     doctorList.clear();
     for (var doctor in doctors.docs) {
-      doctorList
-          .add(DropDownValueModel(name: doctor['name'], value: doctor['uid']));
-    }
+      try {
+        doctorList
+            .add(
+            DropDownValueModel(name: doctor['name'], value: doctor['uid']));
+      }
+      catch(e){
+        continue;
+      }
+      }
     setState(() {});
     // final doctors  = await firestore.collection('Doctors').get();
     // doctorList.clear();

@@ -5,10 +5,11 @@ class FixedSizeTooth extends StatefulWidget {
   @override
   _FixedSizeToothState createState() => _FixedSizeToothState();
 
-  FixedSizeTooth({required this.index, required this.onTap, this.initialValue = false});
+  FixedSizeTooth({required this.index, required this.onTap, this.initialValue = false, this.height = 60, this.width = 60});
   int index;
   Function onTap;
   bool initialValue;
+  double height, width;
 }
 
 class _FixedSizeToothState extends State<FixedSizeTooth> {
@@ -34,8 +35,8 @@ class _FixedSizeToothState extends State<FixedSizeTooth> {
           widget.onTap(widget.index, isSelected);
         },
         child: Container(
-          height: 60,
-          width: 60,
+          height: widget.height,
+          width: widget.width,
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: Colors.white,

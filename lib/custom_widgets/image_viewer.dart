@@ -3,7 +3,7 @@ import 'dart:ffi';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goa_dental_clinic/models/image_model.dart';
-import 'package:image_downloader/image_downloader.dart';
+// import 'package:image_downloader/image_downloader.dart';
 
 import '../constants.dart';
 
@@ -24,8 +24,8 @@ class _ImageViewerState extends State<ImageViewer> {
   }
 
   downloadImage() async {
-    var imageId = await ImageDownloader.downloadImage(widget.im.url.toString());
-    print('Image Id of downloaded image : $imageId}');
+    // var imageId = await ImageDownloader.downloadImage(widget.im.url.toString());
+    // print('Image Id of downloaded image : $imageId}');
   }
 
   @override
@@ -41,12 +41,12 @@ class _ImageViewerState extends State<ImageViewer> {
         children: [
           (widget.im.file == null) ? CachedNetworkImage(imageUrl: widget.im.url!, progressIndicatorBuilder: (context, url, downloadProgress) =>
               Center(child: CircularProgressIndicator(value: downloadProgress.progress, color: kPrimaryColor,)),) : Image.file(widget.im.file!),
-          Container(
+          (widget.im.description!.isEmpty) ? Container() : Container(
             padding: EdgeInsets.only(left: 16, right: 16, bottom: 30, top: 8),
             decoration: BoxDecoration(color: Colors.black.withOpacity(0.4),),
             child: Text('${widget.im.description}', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
             width: double.infinity,
-          )
+          ),
         ],
       ),
     );

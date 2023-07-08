@@ -63,23 +63,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if(role == 'doctor'){
       await firestore.collection('Doctors').doc(uid).set(
         {
-          'name' : name,
-          'phoneNumber' : phoneNumber,
-          'uid' : uid,
-          'role' : role,
-          'email' : email,
-          'token' : userToken,
+          'name' : name.trim(),
+          'phoneNumber' : phoneNumber.trim(),
+          'uid' : uid.trim(),
+          'role' : role.trim(),
+          'email' : email.trim(),
+          'token' : userToken.trim(),
         }
       );
     }else{
       await firestore.collection('Patients').doc(uid).set(
           {
-            'patientName' : name,
-            'phoneNumber' : phoneNumber,
-            'patientUid' : uid,
-            'role' : role,
-            'email' : email,
-            'token' : userToken,
+            'patientName' : name.trim(),
+            'phoneNumber' : phoneNumber.trim(),
+            'patientUid' : uid.trim(),
+            'role' : role.trim(),
+            'email' : email.trim(),
+            'token' : userToken.trim(),
           }
       );
     }
@@ -103,9 +103,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   storeLocally() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    pref.setString('role', role);
-    pref.setString('name', name);
-    pref.setString('email', email);
+    pref.setString('role', role.trim());
+    pref.setString('name', name.trim());
+    pref.setString('email', email.trim());
   }
 
   Future<String> getAndSetToken() async {

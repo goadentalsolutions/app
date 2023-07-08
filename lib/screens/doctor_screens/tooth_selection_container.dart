@@ -93,3 +93,27 @@ class _ToothSelectionWidgetState extends State<ToothSelectionWidget> {
     );
   }
 }
+
+class ToothBlock extends StatelessWidget {
+  final int number;
+
+  const ToothBlock({Key? key, required this.number}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        border: Border.all(color: Colors.black),
+      ),
+      child: Center(
+        child: Text(
+          number.toString(),
+          style: TextStyle(fontSize: 16),
+        ),
+      ),
+    );
+  }
+}

@@ -7,12 +7,15 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/custom_widgets/custom_button.dart';
+import 'package:goa_dental_clinic/custom_widgets/medical_check_box.dart';
 import 'package:goa_dental_clinic/custom_widgets/treatment_text_field.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 import '../../constants.dart';
 import '../../custom_widgets/patient_dropdown.dart';
 import '../../custom_widgets/patient_text_field.dart';
+import '../../providers/add_patient_provider.dart';
 
 class AddPatientScreen4 extends StatefulWidget {
   AddPatientScreen4({required this.updateData});
@@ -29,13 +32,14 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
   FirebaseStorage storage = FirebaseStorage.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   String uid = '';
-  List<DropDownValueModel> diseaseList = [];
   List<String> selectedDiseaseList = [];
-  bool isLoading = true;
+  bool isLoading = false;
   TextEditingController controller = TextEditingController();
-  
+  List<String> alreadyCheckedList = [" lij", '2908'];
+  List<String> checkedList = [];
+
   updateData() {
-    widget.updateData(selectedDiseaseList);
+    widget.updateData(checkedList);
   }
 
 
@@ -44,8 +48,12 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
     // TODO: implement initState
     super.initState();
     uid = auth.currentUser!.uid;
-    initDiseaseList();
-    getDetails();
+
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      updateData();
+    });
+    // initDiseaseList();
+    // getDetails();
   }
 
   getDetails() async {
@@ -66,11 +74,6 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
     });
   }
 
-  initDiseaseList(){
-    diseaseList.add(DropDownValueModel(name: 'Diabates', value: 'Diabates'),);
-    diseaseList.add(DropDownValueModel(name: 'Corona', value: 'Corona',));
-  }
-
   checkIfExists(disease){
     if(disease != '')
     for(var dis in selectedDiseaseList){
@@ -81,9 +84,20 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
     return false;
   }
 
+
+  bool isChecked(e){
+    for(var element in alreadyCheckedList){
+      if(e.trim() == element.trim())
+        return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
+    alreadyCheckedList = Provider.of<AddPatientProvider>(context).mList;
+    checkedList = alreadyCheckedList;
 
     return Container(
       child: isLoading ? Center(child: CircularProgressIndicator(color: kPrimaryColor,),) : SingleChildScrollView(
@@ -109,44 +123,24 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
             SizedBox(
               height: 16,
             ),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  // child: DropDownTextField(dropDownList: diseaseList, onChanged: (value){
-                  //   if(value != null) {
-                  //     setState(() {
-                  //       DropDownValueModel val = value;
-                  //       selectedDisease = val.name;
-                  //     });
-                  //   }
-                  // }, controller: controller,),
-                  child: TextField(
-                    controller: controller,
-                    decoration: InputDecoration(hintText: 'Type here...'),
-                  ),
-                ),
-                SizedBox(width: 12,),
-                Expanded(child: CustomButton(text: 'ADD', backgroundColor: kPrimaryColor, onPressed: (){
-                  setState(() {
-                    if(!checkIfExists(controller.text))
-                      selectedDiseaseList.add(controller.text);
-                    controller.text = '';
-                    updateData();
-                  });
-                })),
-              ],
+            Container(
+              height: size.height * 0.6,
+              child: ListView(
+                children: diseaseList.map((e){
+                  bool val = isChecked(e);
+                  return MedicalCheckBox(title: e, onChanged: (val, title){
+                    if(val) {
+                      checkedList.add(title);
+                      Provider.of<AddPatientProvider>(context, listen: false).setList(checkedList);
+                    }
+                    else {
+                      checkedList.remove(title);
+                      Provider.of<AddPatientProvider>(context, listen: false).setList(checkedList);
+                    }
+                  }, isChecked: val,);
+                }).toList(),
+              ),
             ),
-            SizedBox(height: 32,),
-            ListView.builder(itemBuilder: (context, index){
-
-              return ListTile(title: Text(selectedDiseaseList[index]), trailing: InkWell(child: Icon(Icons.cancel, color: Colors.red,), onTap: (){
-                setState(() {
-                  selectedDiseaseList.removeAt(index);
-                });
-                print('delete');
-              },),);
-            }, itemCount: selectedDiseaseList.length, shrinkWrap: true,),
           ],
         ),
       ),

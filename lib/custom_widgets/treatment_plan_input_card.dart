@@ -1,5 +1,7 @@
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
+import 'package:goa_dental_clinic/custom_widgets/fixed_sized_tooth.dart';
+import 'package:goa_dental_clinic/custom_widgets/tooth.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
 import '../constants.dart';
 import '../models/treatment_model.dart';
@@ -23,9 +25,9 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
     DropDownValueModel(name: kRupee, value: kRupee)
   ];
 
-  List<int> toothList = [];
 
   TextEditingController totalController = TextEditingController();
+  List<FixedSizeTooth> toothList = [];
 
   TreatmentModel tm = TreatmentModel(
     procedure: '',
@@ -65,7 +67,11 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
               onDone: (List<int> tList) {
                 setState(() {
                   tm.toothList = tList;
+                  tList.forEach((element) {
+                    toothList.add(FixedSizeTooth(index: element, onTap: (){}));
+                  });
                 });
+
               });
         });
   }
@@ -77,6 +83,9 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
     if(widget.tm != null){
       tm = widget.tm!;
       totalController.text = tm.total.toString();
+      tm.toothList.forEach((element) {
+        toothList.add(FixedSizeTooth(index: element, onTap: (){}));
+      });
     }
   }
 
@@ -287,6 +296,16 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
                 SizedBox(
                   height: 16,
                 ),
+                Container(
+                  height: 65,
+                  child: Center(
+                    child: ListView.builder(itemBuilder: (context, index){
+
+                      return toothList[index];
+                    }, itemCount: toothList.length, scrollDirection: Axis.horizontal,),
+                  ),
+                ),
+                SizedBox(height: 16,),
                 // Container(
                 //   height: 300,
                 //   child: ToothSelectionWidget(numberOfTeeth: 32, onToothSelected: (index){

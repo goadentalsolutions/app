@@ -4,10 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/custom_widgets/image_viewer.dart';
+import 'package:goa_dental_clinic/custom_widgets/plan_card.dart';
 import 'package:goa_dental_clinic/models/image_model.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 
 import '../../classes/get_patient_details.dart';
+import '../../models/plan_model.dart';
 
 class PatientDetailsScreen extends StatefulWidget {
   PatientDetailsScreen({required this.pm, this.uid = ''});
@@ -24,6 +26,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   FirebaseAuth auth = FirebaseAuth.instance;
   List<String> medHisList = [];
   String profileUrl = '';
+  List<PlanModel> planList = [];
 
   getMedicalHistory() async {
     setState(() {
@@ -53,6 +56,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       getDetails();
     }
     getMedicalHistory();
+    getPlans();
   }
 
   getDetails() async {
@@ -62,16 +66,27 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     });
     final datas = await firestore.collection('Patients').doc(widget.uid).get();
     widget.pm = GetPatientDetails().get(datas);
-    if (widget.pm!.profileUrl == '')
-      profileUrl = '';
-    else
-      profileUrl = widget.pm!.profileUrl;
+    // if (widget.pm!.profileUrl == '')
+    //   profileUrl = '';
+    // else
+    //   profileUrl = widget.pm!.profileUrl;
 
     setState(() {
       isLoading = false;
     });
   }
 
+  
+  getPlans() async {
+    final plans = await firestore.collection('Patients').doc(widget.uid).collection('Plans').get();
+    for(var plan in plans.docs){
+      planList.add(PlanModel(title: plan['title'], toothList: plan['toothList']));
+    }
+
+    setState(() {
+
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,7 +112,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             SizedBox(
                               width: 8,
                             ),
-                            (profileUrl == '')
+                            (widget.pm!.profileUrl == '')
                                 ? InkWell(
                                     child: CircleAvatar(
                                       backgroundColor: kPrimaryColor,
@@ -119,7 +134,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                                 : InkWell(
                                     child: CircleAvatar(
                                       backgroundImage:
-                                          CachedNetworkImageProvider(profileUrl,
+                                          CachedNetworkImageProvider(widget.pm!.profileUrl,
                                               errorListener: () {}),
                                     ),
                                     onTap: () {
@@ -136,8 +151,9 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                               width: 8,
                             ),
                             Text(
-                              'Rounak Naik',
+                              "${widget.pm?.patientName}",
                               style: TextStyle(
+                                overflow: TextOverflow.ellipsis,
                                   fontSize: 28, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -159,7 +175,6 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             RowText(
                                 title: 'Date of birth: ',
                                 content: widget.pm!.dob),
-                            RowText(title: 'Age: ', content: widget.pm!.age),
                           ],
                           initiallyExpanded: true,
                         ),
@@ -180,13 +195,6 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             RowText(
                                 title: 'Street Address: ',
                                 content: widget.pm!.streetAddress),
-                            RowText(
-                                title: 'Locality: ',
-                                content: widget.pm!.locality),
-                            RowText(title: 'City: ', content: widget.pm!.city),
-                            RowText(
-                                title: 'Pincode: ',
-                                content: widget.pm!.pincode),
                           ],
                         ),
                         SizedBox(
@@ -203,7 +211,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                                 return Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Text(
-                                    medHisList[index],
+                                    '${medHisList[index]}',
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 );
@@ -213,6 +221,16 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             ),
                           ],
                         ),
+                        SizedBox(
+                          height: 12,
+                        ),
+                        ExpansionTile(title: Text("Plans", style: TextStyle(fontSize: 20)),
+                        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                        expandedAlignment: Alignment.centerLeft,
+                        children: planList.map((e){
+
+                          return PlanCard(plan: e.title, toothList: e.toothList);
+                        }).toList(),),
                       ]),
                 )
               : Center(

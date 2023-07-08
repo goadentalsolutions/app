@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/classes/get_patient_details.dart';
 import 'package:goa_dental_clinic/constants.dart';
+import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
@@ -194,9 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               InkWell(
                 onTap: (){
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => ToothSelectionWidget(numberOfTeeth: 32, onToothSelected: (int){
-                  //   print(int);
-                  // })));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: '1688663468195',)));
                   Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen(status: 'not_normal',)));
                 },
                 child: Material(

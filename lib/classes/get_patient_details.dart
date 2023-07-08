@@ -10,11 +10,7 @@ class  GetPatientDetails{
         email: data['email'],
         dob: data['dob'],
         gender: data['gender'],
-        city: data['city'],
-        age: data['age'],
-        locality: data['locality'],
-        pincode: data['pincode'],
-        phoneNumber1: data['phoneNumber1'],
+        phoneNumber1: data['phoneNumber'],
         streetAddress: data['streetAddress'],
         profileUrl: data['profileUrl'], token: data['token']);
     }

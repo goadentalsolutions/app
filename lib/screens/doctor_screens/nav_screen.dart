@@ -6,6 +6,7 @@ import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/appointment_history.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/doctor_message_screen.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/home_screen.dart';
+import 'package:goa_dental_clinic/screens/doctor_screens/search_screen.dart';
 import 'package:goa_dental_clinic/screens/login_screen.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/patient_calendar_screen.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/patient_home_screen.dart';
@@ -50,7 +51,7 @@ class _NavScreenState extends State<NavScreen> {
     final data = await firestore.collection('Users').doc(auth.currentUser!.uid).get();
     role = data['role'];
     if(role == 'doctor')
-      screens = [HomeScreen(), CalendarScreen() ,DoctorMessageScreen(), AppointmentHistory()];
+      screens = [HomeScreen(), CalendarScreen(), SearchScreen() ,DoctorMessageScreen(), AppointmentHistory()];
     else
       screens = [PatientHomeScreen(), PatientCalendarScreen(), PatientMessageScreen(), PatientAppointmentHistory()];
 
@@ -67,27 +68,31 @@ class _NavScreenState extends State<NavScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: (isLoading) ? null : ((role == 'doctor') ? GNav(
-          padding: EdgeInsets.only(bottom: 30, top: 25, left: 25, right: 25),
-          onTabChange: _onItemTapped,
-          activeColor: Colors.blue,
-          gap: 8,
-          tabs: [
-            GButton(
-              icon: Icons.home_outlined,
-              text: 'Home',
+      bottomNavigationBar: (isLoading) ? null : ((role == 'doctor') ? BottomNavigationBar(
+          onTap: _onItemTapped,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.black,
+          currentIndex: _currentIndex,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined,),
+              label: 'Home',
             ),
-            GButton(
-              icon: Icons.calendar_month,
-              text: 'Calendar',
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month),
+              label: 'Calendar',
             ),
-            GButton(
-              icon: Icons.message_outlined,
-              text: 'Messages',
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: 'Search',
             ),
-            GButton(
-              icon: Icons.history,
-              text: 'History',
+            BottomNavigationBarItem(
+              icon: Icon(Icons.message_outlined),
+              label: 'Messages',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history),
+              label: 'History',
             ),
           ]) : GNav(
           padding: EdgeInsets.only(bottom: 30, top: 25, left: 25, right: 25),

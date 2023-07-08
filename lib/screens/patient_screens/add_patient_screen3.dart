@@ -32,7 +32,7 @@ class _AddPatientScreen3State extends State<AddPatientScreen3> {
   bool isLoading = true;
 
   pickImage() async {
-    final image = await ImagePicker.platform.pickImage(source: ImageSource.gallery);
+    final image = await ImagePicker.platform.pickImage(source: ImageSource.camera);
     if(image == null){
       print('image null');
     }
@@ -74,6 +74,7 @@ class _AddPatientScreen3State extends State<AddPatientScreen3> {
 
   @override
   Widget build(BuildContext context) {
+
     Size size = MediaQuery.of(context).size;
     
     return Container(

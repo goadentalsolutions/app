@@ -19,7 +19,7 @@ class AddPatientScreen2 extends StatefulWidget {
 
 class _AddPatientScreen2State extends State<AddPatientScreen2> {
 
-  String phone1 = '', phone2 = '', language = 'English', email = '', streetAddress = '', locality = '', city = '', pincode = '';
+  String phone1 = '', streetAddress = '', email = "";
   Map<String, String>? data;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   String uid = '';
@@ -31,9 +31,6 @@ class _AddPatientScreen2State extends State<AddPatientScreen2> {
       'phoneNumber1' : phone1,
       'email' : email,
       'streetAddress' : streetAddress,
-      'locality' : locality,
-      'city' : city,
-      'pincode' : pincode,
     };
     widget.updateData(data);
   }
@@ -42,12 +39,9 @@ class _AddPatientScreen2State extends State<AddPatientScreen2> {
       final data = await firestore.collection('Patients').doc(uid).get();
       setState(() {
         try {
-          phone1 = data['phoneNumber1'];
+          phone1 = data['phoneNumber'];
           email = data['email'];
           streetAddress = data['streetAddress'];
-          locality = data['locality'];
-          city = data['city'];
-          pincode = data['pincode'];
         }
         catch(e){
           print(e);
@@ -76,7 +70,7 @@ class _AddPatientScreen2State extends State<AddPatientScreen2> {
       child: isLoading ? Center(child: CircularProgressIndicator(color: kPrimaryColor,),) : SingleChildScrollView(
         child: Column(
           children: [
-            PatientTextField(title: 'Primary phone no.: ', onChanged: (value){
+            PatientTextField(title: 'Phone no.: ', onChanged: (value){
               setState(() {
                 phone1 = value;
                 updateData();
@@ -90,33 +84,13 @@ class _AddPatientScreen2State extends State<AddPatientScreen2> {
               });
             }, inputValue: email,),
             SizedBox(height: 32,),
-            PatientTextField(title: 'Street Address: ', onChanged: (value){
+            PatientTextField(title: 'Address: ', onChanged: (value){
               setState(() {
                 streetAddress = value;
                 updateData();
               });
             }, inputValue: streetAddress,),
             SizedBox(height: 32,),
-            PatientTextField(title: 'Locality', onChanged: (value){
-              setState(() {
-                locality = value;
-                updateData();
-              });
-              }, inputValue: locality,),
-            SizedBox(height: 32,),
-            PatientTextField(title: 'City', onChanged: (value){
-              setState(() {
-                city = value;
-                updateData();
-              });
-            }, inputValue: city,),
-            SizedBox(height: 32,),
-            PatientTextField(title: 'Pincode', inputType: TextInputType.number, onChanged: (value){
-              setState(() {
-                pincode = value;
-                updateData();
-              });
-            }, inputValue: pincode,),
           ],
         ),
       ),

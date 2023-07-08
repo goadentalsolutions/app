@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,8 +15,11 @@ import 'package:goa_dental_clinic/custom_widgets/text_textfield_dropdown.dart';
 import 'package:goa_dental_clinic/custom_widgets/treatment_text_field.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/nav_screen.dart';
+import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen4.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/add_patient_provider.dart';
 import 'add_patient_screen1.dart';
 import 'add_patient_screen2.dart';
 import 'add_patient_screen3.dart';
@@ -40,12 +42,16 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   FirebaseAuth auth = FirebaseAuth.instance;
   String uid = '', actualUrl = '';
   UploadTask? uploadTask;
-  var data1, data2;
+  var data1;
   List<String> data3 = [];
   File? fi;
-  bool isLoading = false;
+  bool isLoading = false, dataUploading = false;
 
   uploadData() async {
+    setState(() {
+      dataUploading = true;
+    });
+
     try {
       setState(() {
         isLoading = true;
@@ -55,42 +61,27 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         try {
           await firestore.collection('Patients').doc(uid).set({
             'patientName': data1['patientName'],
-            // 'patientId': data1['patientId'],
-            // 'aadharId': data1['aadharId'],
             'gender': data1['gender'],
             'dob': data1['dob'],
-            'age': data1['age'],
-            // 'anniversary': data1['anniversary'],
-            // 'bloodGrp': data1['bloodGrp'],
             'patientUid': uid,
-          }, SetOptions(merge: true));
-        }
-        catch (e) {
-          print('$e');
-        }
-      }
-      if (data2 != null) {
-        try {
-          await firestore.collection('Patients').doc(uid).set({
-            'phoneNumber1': data2['phoneNumber1'],
-            'email': data2['email'],
-            'streetAddress': data2['streetAddress'],
-            'locality': data2['locality'],
-            'pincode': data2['pincode'],
-            'city': data2['city'],
+            'phoneNumber': data1['phoneNumber'],
+            'email': data1['email'],
+            'streetAddress': data1['streetAddress'],
             'token': '',
           }, SetOptions(merge: true));
-        }
-        catch (e) {
-          print(e);
+        } catch (e) {
+          print('$e');
         }
       }
 
       if (data3.isNotEmpty || data3 != null) {
         for (var disease in data3) {
-          await firestore.collection('Patients').doc(uid)
+          await firestore
+              .collection('Patients')
+              .doc(uid)
               .collection('Medical History')
-              .doc(disease).set({'disease': disease});
+              .doc(disease)
+              .set({'disease': disease.trim()});
         }
       }
 
@@ -101,11 +92,11 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
           await firestore.collection('Patients').doc(uid).set({
             'profileUrl': url,
           }, SetOptions(merge: true));
-        }catch(e){
+        } catch (e) {
           print(e);
+          Alert(context, e);
         }
-      }
-      else if(fi == null && actualUrl == ''){
+      } else if (fi == null && actualUrl == '') {
         await firestore.collection('Patients').doc(uid).set({
           'profileUrl': '',
         }, SetOptions(merge: true));
@@ -114,50 +105,49 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         'setup': 2,
       }, SetOptions(merge: true));
 
-      if(widget.status != 'normal'){
-        await firestore.collection('Users').doc(uid).set(
-            {
-              'name' : data1['patientName'],
-              'phoneNumber' : data2['phoneNumber1'],
-              'email' : data2['email'],
-              'role' : 'patient',
-              'uid' : uid,
-              'token' : '',
-              'setup' : 2,
-            }
-        );
+      if (widget.status != 'normal') {
+        await firestore.collection('Users').doc(uid).set({
+          'name': data1['patientName'].toString().trim(),
+          'phoneNumber': data1['phoneNumber'].toString().trim(),
+          'email': data1['email'].toString().trim(),
+          'role': 'patient',
+          'uid': uid,
+          'token': '',
+          'setup': 2,
+        });
       }
 
       setState(() {
         isLoading = false;
+        dataUploading = false;
       });
-      Navigator.push(context, MaterialPageRoute(builder: (context) => NavScreen()));
-    }
-    catch(e){
-      Alert(context, e);
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => TestScreen(patientUid: uid)));
+    } catch (e) {
+      Alert(context, "ada $e");
     }
   }
 
   Future<String> uploadImage() async {
     try {
-      final data = await storage.ref().child('profiles').child(DateTime.now().millisecondsSinceEpoch.toString());
+      final data = await storage
+          .ref()
+          .child('profiles')
+          .child(DateTime.now().millisecondsSinceEpoch.toString());
 
       uploadTask = data.putFile(fi!);
       final snapshot = await uploadTask?.whenComplete(() => () {});
       return (await snapshot?.ref.getDownloadURL())!;
-    }
-    catch(e){
-
+    } catch (e) {
       return '';
     }
   }
-
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    if(widget.status == 'normal')
+    if (widget.status == 'normal')
       uid = auth.currentUser!.uid;
     else
       uid = DateTime.now().millisecondsSinceEpoch.toString();
@@ -177,20 +167,34 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                 children: [
                   Row(
                     children: [
-                      InkWell(child: Icon(Icons.arrow_back_ios_new_outlined, color: Colors.black,), onTap: (){
-                        Navigator.pop(context);
-                      },),
-                      SizedBox(width: 16,),
+                      InkWell(
+                        child: Icon(
+                          Icons.arrow_back_ios_new_outlined,
+                          color: Colors.black,
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                      SizedBox(
+                        width: 16,
+                      ),
                       Text(
                         'Add Details',
-                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold,),
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                   SizedBox(
                     height: 16,
                   ),
-                  Text('Fill this form to get started !', style: TextStyle(color: kGrey, fontSize: 24),),
+                  Text(
+                    'Fill this form to get started !',
+                    style: TextStyle(color: kGrey, fontSize: 24),
+                  ),
                   SizedBox(
                     height: 32,
                   ),
@@ -198,29 +202,37 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                     child: PageView(
                       controller: pageController,
                       scrollDirection: Axis.horizontal,
-                      onPageChanged: (pageIndex) {
-
-                      },
+                      onPageChanged: (pageIndex) {},
                       children: [
-                        AddPatientScreen1(updateData: (Map<String, String> data){
-                          setState(() {
-                            data1 = data;
-                            print(data1);
-                          });
-                        }, status: widget.status,),
-                        AddPatientScreen2(updateData: (Map<String, String> data){
-                          setState(() {
-                            data2 = data;
-                            print(data2);
-                          });
-                        },),
-                        AddPatientScreen3(updateData: (file, url){
-                          setState(() {
-                            fi = file;
-                            actualUrl = url;
-                          });
-                        },),
-                        AddPatientScreen4(updateData: (List<String> data){
+                        AddPatientScreen1(
+                          updateData: (Map<String, String> data) {
+                            setState(() {
+                              data1 = data;
+                              Provider.of<AddPatientProvider>(context,
+                                      listen: false)
+                                  .setPatient(PatientModel(
+                                      patientUid: data1['patientUid'] ?? "",
+                                      patientName: data1['patientName'] ?? "",
+                                      email: data1['email'] ?? "",
+                                      dob: data1['dob'] ?? "",
+                                      gender: data1['gender'],
+                                      phoneNumber1: data1['phoneNumber'] ?? "",
+                                      streetAddress:
+                                          data1['streetAddress'] ?? "",
+                                      profileUrl: data1['profileUrl'] ?? ""));
+                            });
+                          },
+                          status: widget.status,
+                        ),
+                        AddPatientScreen3(
+                          updateData: (file, url) {
+                            setState(() {
+                              fi = file;
+                              actualUrl = url;
+                            });
+                          },
+                        ),
+                        AddPatientScreen4(updateData: (List<String> data) {
                           setState(() {
                             data3 = data;
                           });
@@ -241,10 +253,11 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                             text: 'PREVIOUS',
                             backgroundColor: kPrimaryColor,
                             onPressed: () {
-                              pageController.previousPage(duration: Duration(
-                                  milliseconds: 500), curve: Curves.ease);
+                              pageController.previousPage(
+                                  duration: Duration(milliseconds: 500),
+                                  curve: Curves.ease);
                               int? pageIndex = pageController.page?.toInt();
-                              switch(pageIndex){
+                              switch (pageIndex) {
                                 case 1:
                                   setState(() {
                                     isPrevVisible = true;
@@ -275,49 +288,62 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                   Visibility(
                     visible: isNextVisible,
                     child: Container(
-                        width: 100,
-                        child: CustomButton(
-                            text: 'NEXT',
-                            isLoading: isLoading,
-                            loadingWidget: Center(
-                              child: CircularProgressIndicator(color: Colors.white,),
-                            ),
-                            backgroundColor: kPrimaryColor,
-                            onPressed: () {
-                              pageController.nextPage(duration: Duration(
-                                  milliseconds: 500), curve: Curves.ease);
-                              int? pageIndex = pageController.page?.toInt();
+                      width: 100,
+                      child: CustomButton(
+                        text: 'NEXT',
+                        isLoading: isLoading,
+                        loadingWidget: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                        backgroundColor: kPrimaryColor,
+                        onPressed: () {
+                          if (!(data1['patientName'] == "" ||
+                              data1['gender'] == "" ||
+                              data1['dob'] == "" ||
+                              data1['phone1'] == "phoneNumber")) {
+                            pageController.nextPage(
+                                duration: Duration(milliseconds: 500),
+                                curve: Curves.ease);
+                            int? pageIndex = pageController.page?.toInt();
 
-                              if(pageIndex == 3){
-                                uploadData();
-                              }
-                              switch(pageIndex){
-                                case 0:
-                                  setState(() {
-                                    isPrevVisible = true;
-                                    isNextVisible = true;
-                                  });
-                                  break;
-                                case 1:
-                                  setState(() {
-                                    isPrevVisible = true;
-                                    isNextVisible = true;
-                                  });
-                                  break;
-                                case 2:
-                                  setState(() {
-                                    isPrevVisible = false;
-                                    isNextVisible = true;
-                                  });
-                                  break;
-                                case 3:
-                                  setState(() {
-                                    isPrevVisible = false;
-                                    isNextVisible = true;
-                                  });
-                                  break;
-                              }
-                            })),
+                            if (pageIndex == 2) {
+                              if(!dataUploading)
+                              uploadData();
+                            }
+                            switch (pageIndex) {
+                              case 0:
+                                setState(() {
+                                  isPrevVisible = true;
+                                  isNextVisible = true;
+                                });
+                                break;
+                              case 1:
+                                setState(() {
+                                  isPrevVisible = true;
+                                  isNextVisible = true;
+                                });
+                                break;
+                              case 2:
+                                setState(() {
+                                  isPrevVisible = false;
+                                  isNextVisible = true;
+                                });
+                                break;
+                              case 3:
+                                setState(() {
+                                  isPrevVisible = false;
+                                  isNextVisible = true;
+                                });
+                                break;
+                            }
+                          }else{
+                            Alert(context, "Name, gender, DOB, Phone No. are mandatory fields!");
+                          }
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),

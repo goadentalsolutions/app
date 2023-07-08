@@ -2,7 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:goa_dental_clinic/constants.dart';
+import 'package:goa_dental_clinic/providers/add_patient_provider.dart';
 import 'package:goa_dental_clinic/screens/welcome_screen.dart';
+import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 
@@ -43,7 +45,10 @@ void main() async {
     }
   });
 
-  return runApp(const MyApp());
+  return runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => AddPatientProvider()),
+  ],
+  child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
