@@ -6,12 +6,13 @@ import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_contain
 import '../constants.dart';
 
 class SelectionWithTooth extends StatefulWidget {
-  SelectionWithTooth({required this.title, required this.onAdd, required this.onChecked, this.readOnly = true, this.isChecked = false});
-  Function(List<int>, String) onAdd;
+  SelectionWithTooth({required this.title, required this.onAdd, required this.onChecked, this.readOnly = true, this.isChecked = false, this.addList});
+  Function(List<dynamic>, String, bool) onAdd;
   Function(bool, String) onChecked;
   bool readOnly;
   String title;
   bool isChecked;
+  List<dynamic>? addList;
 
   @override
   State<SelectionWithTooth> createState() => _SelectionWithToothState();
@@ -25,7 +26,12 @@ class _SelectionWithToothState extends State<SelectionWithTooth> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    if(widget.addList!.isNotEmpty || widget.addList != null)
+      toothList = widget.addList!.map((e){
+        return FixedSizeTooth(index: e, onTap: (){}, height: 40, width: 40,);
+      }).toList();
     textController.text = widget.title;
+    isChecked = widget.isChecked;
   }
 
   @override
@@ -73,13 +79,16 @@ class _SelectionWithToothState extends State<SelectionWithTooth> {
                         MaterialPageRoute(
                           builder: (context) => ToothSelectionWidget(
                             numberOfTeeth: 32,
+                            tList: widget.addList,
                             onDone: (list) {
+                              print(list);
                               setState(() {
+                                toothList.clear();
                                 for(var e in list){
                                   toothList.add(FixedSizeTooth(index: e, onTap: (){}, height: 40, width: 40,),);
                                 }
                               });
-                              widget.onAdd(list, textController.text);
+                              widget.onAdd(list, textController.text, isChecked);
                             },
                           ),
                         ),

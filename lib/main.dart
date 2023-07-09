@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/providers/add_patient_provider.dart';
+import 'package:goa_dental_clinic/providers/add_plan_provider.dart';
 import 'package:goa_dental_clinic/screens/welcome_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -47,6 +48,7 @@ void main() async {
 
   return runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (context) => AddPatientProvider()),
+    ChangeNotifierProvider(create: (context) => AddPlanProvider()),
   ],
   child: const MyApp()));
 }

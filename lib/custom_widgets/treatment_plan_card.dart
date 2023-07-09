@@ -57,7 +57,7 @@ class _TreatmentPlanCardState extends State<TreatmentPlanCard> {
         });
   }
 
-  showTooth(List<int> toothList) {
+  showTooth(List<dynamic> toothList) {
     List<FixedSizeTooth> tList = [];
 
     toothList.forEach((element) {

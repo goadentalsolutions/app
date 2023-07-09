@@ -64,7 +64,7 @@ class _TreatmentPlanInputCardState extends State<TreatmentPlanInputCard> {
           return ToothSelectionWidget(
               numberOfTeeth: 32,
               tList: tm.toothList,
-              onDone: (List<int> tList) {
+              onDone: (List<dynamic> tList) {
                 setState(() {
                   tm.toothList = tList;
                   tList.forEach((element) {

@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/custom_widgets/custom_button.dart';
 import 'package:goa_dental_clinic/custom_widgets/selection_with_tooth.dart';
+import 'package:goa_dental_clinic/providers/add_plan_provider.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/nav_screen.dart';
+import 'package:provider/provider.dart';
+
+import '../../models/plan_model.dart';
 
 class TestScreen extends StatefulWidget {
   TestScreen({required this.patientUid});
@@ -23,6 +27,8 @@ class _TestScreenState extends State<TestScreen> {
   List<Map> toothListMap = [];
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
+  List<PlanModel> planList = [];
+  List<PlanModel> selectedPlanList = [];
 
   createCard(){
 
@@ -53,23 +59,10 @@ class _TestScreenState extends State<TestScreen> {
               SizedBox(height: 12,),
               Container(child: CustomButton(text: 'ADD', backgroundColor: kPrimaryColor, onPressed: (){
                 setState(() {
-                  cards.add(
-                    SelectionWithTooth(title: titleName, onAdd: (List<int> list, title) {
-                      toothListMap.add(
-                          {
-                            "title" : title,
-                            "list" : list,
-                          }
-                      );
-                    }, onChecked: (bool isChecked, String title) {
-                      print(isChecked);
-                      if(isChecked)
-                        titles.add(title);
-                      else
-                        titles.remove(title);
-                    }, readOnly: true,),
+                  planList.add(
+                    PlanModel(title: titleName, toothList: [])
                   );
-                  titles.add(titleName);
+                  Provider.of<AddPlanProvider>(context, listen: false).setPList(selectedPlanList);
                 });
                 Navigator.pop(context);
               }), width: 80,),
@@ -81,56 +74,23 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   save() async {
-    for(var e in titles){
-      print(e);
+    for(var e in selectedPlanList){
+      print(e.toothList);
     }
-    String planId = DateTime.now().millisecondsSinceEpoch.toString();
-    var fire = firestore.collection('Patients').doc(widget.patientUid).collection('Plans');
 
-    //saving titles first
-    for(var title in titles){
-      firestore.collection('Patients').doc(widget.patientUid).collection('Plans').doc(title).set(
+    for(var plan in selectedPlanList){
+      firestore.collection('Patients').doc(widget.patientUid).collection('Plans').doc(plan.title).set(
         {
-          "title" : title,
-          "planId" : planId,
-          "toothList" : [],
+          "title" : plan.title,
+          "toothList" : plan.toothList,
         }
       );
-
-      for(var map in toothListMap){
-        if(map['title'] == title){
-          //getting tooth list of that title
-          // for(var tooth in map['list']){
-            fire.doc(title).set(
-              {
-                "title" : title,
-                "toothList": map['list'],
-                "planId" : planId
-              }
-            );
-          // }
-        }
-      }
-
-
     }
 
     Navigator.push(context, MaterialPageRoute(builder: (context) => NavScreen()));
   }
 
   getPlansUsingProvider(){
-
-    List<Map> maps = [];
-
-    // for(var map in maps){
-    //   cards.add(
-    //     SelectionWithTooth(title: map['title'], onAdd: (list, title){
-    //
-    //     }, onChecked: (isChecked, title){
-    //
-    //     }, isChecked:  ,),
-    //   );
-    // }
 
   }
 
@@ -143,52 +103,31 @@ class _TestScreenState extends State<TestScreen> {
 
   addInitialCards(){
     setState(() {
-      cards.add(
-        SelectionWithTooth(title: 'Clining Teeth', onAdd: (List<int> list, title) {
-          print("Added tooth");
-          toothListMap.add(
-              {
-                "title" : title,
-                "list" : list,
-              }
-          );
-        }, onChecked: (bool isChecked, title) {
-          if(isChecked) {
-            titles.add(title);
-            toothListMap.add(
-                {
-                  "title" : title,
-                  "list" : [],
-                }
-            );
-          }
-          else {
-            titles.remove(title);
-          }
-        },),
-      );
-      cards.add(
-        SelectionWithTooth(title: 'ROUNAK18', onAdd: (List<int> list, title) {
-          print("Added tooth");
-          toothListMap.add(
-              {
-                "title" : title,
-                "list" : list,
-              }
-          );
-        }, onChecked: (bool isChecked, title) {
-          print(isChecked);
-          if(isChecked)
-            titles.add(title);
-          else
-            titles.remove(title);
-        },),
-      );
+      var list = Provider.of<AddPlanProvider>(context, listen: false).pList;
+
+      if(list.isEmpty) {
+        planList.add(
+          PlanModel(title: 'Clining', toothList: []),
+        );
+        planList.add(
+          PlanModel(title: 'Washing', toothList: [23, 123, 2]),
+        );
+      }
+      else{
+        planList = list;
+      }
+
+      for(var plan in planList){
+        if(plan.isChecked)
+          selectedPlanList.add(plan);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // addInitialCards();
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: (){
@@ -200,9 +139,40 @@ class _TestScreenState extends State<TestScreen> {
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           child: Column(children: [
-            ListView.builder(itemBuilder: (context, index){
-              return cards[index];
-              }, itemCount: cards.length, shrinkWrap: true,),
+            ListView(
+              shrinkWrap: true,
+              children: planList.map((e){
+
+                return SelectionWithTooth(title: e.title, addList: e.toothList ,onAdd: (list, title, isChecked){
+                  e.toothList = list;
+                  if(isChecked){
+                    selectedPlanList.forEach((element) {
+                      if(element == title){
+                        element.toothList = list;
+                      }
+                    });
+                    Provider.of<AddPlanProvider>(context, listen: false).setPList(selectedPlanList);
+                  }
+                  else{
+                    selectedPlanList.remove(e);
+                    Provider.of<AddPlanProvider>(context, listen: false).setPList(selectedPlanList);
+                  }
+                }, onChecked: (value, title){
+                  try {
+                    if (value) {
+                      selectedPlanList.add(PlanModel(title: e.title, toothList: e.toothList, isChecked: value));
+                      Provider.of<AddPlanProvider>(context, listen: false).setPList(selectedPlanList);
+                    }
+                    else {
+                      selectedPlanList.remove(e);
+                      Provider.of<AddPlanProvider>(context, listen: false).setPList(selectedPlanList);
+                    }
+                  }catch(e){
+                    print(e);
+                  }
+                }, isChecked: e.isChecked,);
+              }).toList(),
+            ),
             InkWell(
               onTap: (){
                 setState(() {

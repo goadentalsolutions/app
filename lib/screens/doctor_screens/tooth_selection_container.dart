@@ -5,9 +5,8 @@ import 'package:goa_dental_clinic/custom_widgets/tooth.dart';
 
 class ToothSelectionWidget extends StatefulWidget {
   final int numberOfTeeth;
-  Function(List<int>) onDone;
-  List<int>? tList;
-
+  Function(List<dynamic>) onDone;
+  List<dynamic>? tList;
   ToothSelectionWidget({required this.numberOfTeeth, required this.onDone, this.tList = null});
 
   @override
@@ -16,7 +15,7 @@ class ToothSelectionWidget extends StatefulWidget {
 
 class _ToothSelectionWidgetState extends State<ToothSelectionWidget> {
 
-  List<int> toothList = [];
+  List<dynamic> toothList = [];
 
   bool isSelected(toothNumber){
     bool selected = true;

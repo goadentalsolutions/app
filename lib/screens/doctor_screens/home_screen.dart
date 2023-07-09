@@ -195,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               InkWell(
                 onTap: (){
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: '1688663468195',)));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: '1688834352945',)));
                   Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen(status: 'not_normal',)));
                 },
                 child: Material(

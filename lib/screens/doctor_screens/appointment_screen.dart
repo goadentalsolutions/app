@@ -627,7 +627,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         builder: (context) {
           return ToothSelectionWidget(
               numberOfTeeth: 32,
-              onDone: (List<int> toothList) {
+              onDone: (List<dynamic> toothList) {
                 toothList.forEach((element) {
                   print(element);
                 });
