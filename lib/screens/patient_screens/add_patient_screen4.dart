@@ -9,6 +9,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/custom_widgets/custom_button.dart';
 import 'package:goa_dental_clinic/custom_widgets/medical_check_box.dart';
 import 'package:goa_dental_clinic/custom_widgets/treatment_text_field.dart';
+import 'package:googleapis/chat/v1.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -35,6 +36,7 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
   List<String> selectedDiseaseList = [];
   bool isLoading = false;
   TextEditingController controller = TextEditingController();
+  late TextEditingController historyController;
   List<String> alreadyCheckedList = [" lij", '2908'];
   List<String> checkedList = [];
 
@@ -48,7 +50,7 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
     // TODO: implement initState
     super.initState();
     uid = auth.currentUser!.uid;
-
+    historyController =  TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_){
       updateData();
     });
@@ -93,57 +95,118 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
     return false;
   }
 
+  addCustom(){
+
+    showDialog(context: context, builder: (context){
+
+      Size size = MediaQuery.of(context).size;
+      return Material(
+        color: Colors.transparent,
+        child: Center(
+          child: Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Colors.white,),
+            height: size.height * 0.2,
+            width: size.width * 0.9,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: historyController,
+                    decoration: InputDecoration(hintText: 'Type here', border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black),
+                    ),),
+                    onChanged: (newValue){
+
+                    },
+                  ),
+                  SizedBox(height: 16,),
+                  CustomButton(text: 'ADD', backgroundColor: kPrimaryColor, onPressed: (){
+                    setState(() {
+                      diseaseList.add(historyController.text);
+                    });
+                    Navigator.pop(context);
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     alreadyCheckedList = Provider.of<AddPatientProvider>(context).mList;
     checkedList = alreadyCheckedList;
 
-    return Container(
-      child: isLoading ? Center(child: CircularProgressIndicator(color: kPrimaryColor,),) : SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      children: [
+        Container(
+          child: isLoading ? Center(child: CircularProgressIndicator(color: kPrimaryColor,),) : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  'Medical History',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Medical History',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Text(
+                      '(Optional)',
+                      style: TextStyle(color: kGrey),
+                    ),
+                  ],
                 ),
                 SizedBox(
-                  width: 8,
+                  height: 16,
                 ),
-                Text(
-                  '(Optional)',
-                  style: TextStyle(color: kGrey),
+                Container(
+                  height: size.height * 0.6,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: diseaseList.map((e){
+                        bool val = isChecked(e);
+                        return MedicalCheckBox(title: e, onChanged: (val, title){
+                          if(val) {
+                            checkedList.add(title);
+                            Provider.of<AddPatientProvider>(context, listen: false).setList(checkedList);
+                            updateData();
+                          }
+                          else {
+                            checkedList.remove(title);
+                            Provider.of<AddPatientProvider>(context, listen: false).setList(checkedList);
+                          }
+                        }, isChecked: val,);
+                      }).toList(),
+                    ),
+                  ),
                 ),
               ],
             ),
-            SizedBox(
-              height: 16,
-            ),
-            Container(
-              height: size.height * 0.6,
-              child: ListView(
-                children: diseaseList.map((e){
-                  bool val = isChecked(e);
-                  return MedicalCheckBox(title: e, onChanged: (val, title){
-                    if(val) {
-                      checkedList.add(title);
-                      Provider.of<AddPatientProvider>(context, listen: false).setList(checkedList);
-                    }
-                    else {
-                      checkedList.remove(title);
-                      Provider.of<AddPatientProvider>(context, listen: false).setList(checkedList);
-                    }
-                  }, isChecked: val,);
-                }).toList(),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: InkWell(
+            onTap: (){
+              addCustom();
+            },
+            child: CircleAvatar(
+              child: Icon(Icons.add, color: Colors.white, size: 30,),
+              backgroundColor: kPrimaryColor,
+              radius: 30,
+            ),
+          ),
+        )
+      ],
     );
   }
 }

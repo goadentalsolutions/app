@@ -1,9 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/providers/add_patient_provider.dart';
 import 'package:goa_dental_clinic/providers/add_plan_provider.dart';
+import 'package:goa_dental_clinic/providers/add_pre_provider.dart';
 import 'package:goa_dental_clinic/screens/welcome_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -45,10 +47,10 @@ void main() async {
       print('Message also contained a notification: ${message.notification}');
     }
   });
-
   return runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (context) => AddPatientProvider()),
     ChangeNotifierProvider(create: (context) => AddPlanProvider()),
+    ChangeNotifierProvider(create: (context) => AddPreProvider()),
   ],
   child: const MyApp()));
 }

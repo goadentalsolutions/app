@@ -1,9 +1,10 @@
+import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 
 import '../constants.dart';
 
-class TreatmentTextField extends StatefulWidget {
-  TreatmentTextField(
+class SuggestionTreatmentTextField extends StatefulWidget {
+  SuggestionTreatmentTextField(
       {required this.title,
         required this.onChanged,
         this.inputType = TextInputType.text,
@@ -17,31 +18,22 @@ class TreatmentTextField extends StatefulWidget {
   String inputValue;
 
   @override
-  State<TreatmentTextField> createState() => _TreatmentTextFieldState();
+  State<SuggestionTreatmentTextField> createState() => _SuggestionTreatmentTextFieldState();
 }
 
-class _TreatmentTextFieldState extends State<TreatmentTextField> {
-  late TextEditingController controller;
-  late FocusNode _focusNode;
+class _SuggestionTreatmentTextFieldState extends State<SuggestionTreatmentTextField> {
+  TextEditingController controller = TextEditingController();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    controller = TextEditingController(text: widget.inputValue);
-    _focusNode = FocusNode();
     widget.hintText =
     (widget.hintText.isEmpty) ? 'Enter ${widget.title}' : widget.hintText;
     print(widget.inputValue);
     controller.text = widget.inputValue;
   }
 
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    _focusNode.dispose();
-    super.dispose();
-  }
   @override
   Widget build(BuildContext context) {
     widget.hintText =
@@ -58,22 +50,23 @@ class _TreatmentTextFieldState extends State<TreatmentTextField> {
         ),
         Expanded(
           flex: 3,
-          child: TextField(
-            focusNode: _focusNode,
+          child: DropDownTextField(
             onChanged: (value) {
-              widget.onChanged(value);
+              DropDownValueModel val = value;
+              widget.onChanged(val.name);
             },
-            controller: controller,
-            enabled: widget.enabled,
-            readOnly: !widget.enabled,
-            maxLines: null,
-            decoration: InputDecoration(
+            enableSearch: true,
+            searchDecoration: InputDecoration(
+              hintText: "Search drug"
+            ),
+            textFieldDecoration: InputDecoration(
               hintText: '${widget.hintText}',
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.black),
               ),
-            ),
-            keyboardType: widget.inputType,
+            ),dropDownList: [
+              DropDownValueModel(name: 'drug', value: 'drug'),
+          ],
           ),
         ),
       ],

@@ -43,7 +43,7 @@ class HomeTopBar extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.w400,
                       fontSize: 24),
-                )),
+                ),),
           ) : InkWell(child: CircleAvatar(backgroundImage: CachedNetworkImageProvider(profileUrl),), onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen()));
           }),

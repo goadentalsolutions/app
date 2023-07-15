@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class PlanModel{
 
-  String title;
+  String plan;
   List<dynamic> toothList = [];
   bool isChecked;
 
-  PlanModel({required this.title, required this.toothList, this.isChecked = false});
+  PlanModel({required this.plan, required this.toothList, this.isChecked = false});
 }

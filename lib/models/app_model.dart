@@ -1,8 +1,9 @@
 import 'package:goa_dental_clinic/models/patient_model.dart';
 
 class AppModel {
-  String date, time, week, patientName, doctorName, patientUid, doctorUid, appId, startTimeInMil, endTimeInMil, month;
+  String date, time, week, patientName, doctorName, patientUid, doctorUid, appId, startTimeInMil, endTimeInMil, month, plan;
   PatientModel? pm;
+  List<dynamic> toothList = [];
 
   AppModel({
     required this.patientName,
@@ -17,5 +18,7 @@ class AppModel {
     required this.startTimeInMil,
     required this.endTimeInMil,
     required this.month,
+    required this.plan,
+    required this.toothList,
   });
 }

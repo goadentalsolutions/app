@@ -11,7 +11,8 @@ class AppointmentMessageModel {
       appId,
       msgId,
       startTimeInMil,
-      endTimeInMil, month;
+      endTimeInMil, month, plan;
+  List<dynamic> toothList = [];
 
   AppointmentMessageModel(
       {required this.date,
@@ -26,5 +27,7 @@ class AppointmentMessageModel {
       required this.startTimeInMil,
       required this.endTimeInMil,
       required this.month,
+          required this.toothList,
+          required this.plan,
       });
 }

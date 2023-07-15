@@ -5,11 +5,12 @@ class FixedSizeTooth extends StatefulWidget {
   @override
   _FixedSizeToothState createState() => _FixedSizeToothState();
 
-  FixedSizeTooth({required this.index, required this.onTap, this.initialValue = false, this.height = 60, this.width = 60});
+  FixedSizeTooth({required this.index, required this.onTap, this.initialValue = false, this.height = 60, this.width = 60, this.nontapable = true});
   int index;
   Function onTap;
   bool initialValue;
   double height, width;
+  bool nontapable;
 }
 
 class _FixedSizeToothState extends State<FixedSizeTooth> {
@@ -29,10 +30,12 @@ class _FixedSizeToothState extends State<FixedSizeTooth> {
       padding: const EdgeInsets.all(4.0),
       child: GestureDetector(
         onTap: (){
-          setState(() {
-            isSelected = !isSelected;
-          });
-          widget.onTap(widget.index, isSelected);
+          if(!widget.nontapable) {
+            setState(() {
+              isSelected = !isSelected;
+            });
+            widget.onTap(widget.index, isSelected);
+          }
         },
         child: Container(
           height: widget.height,

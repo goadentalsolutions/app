@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:goa_dental_clinic/custom_widgets/fixed_sized_tooth.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
@@ -69,7 +70,6 @@ class _SelectionWithToothState extends State<SelectionWithTooth> {
                     controller: textController,
                   ),
                 ),
-                Spacer(),
                 Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: GestureDetector(
@@ -82,10 +82,15 @@ class _SelectionWithToothState extends State<SelectionWithTooth> {
                             tList: widget.addList,
                             onDone: (list) {
                               print(list);
+                              //switch orientation to protrait if in landscape mode
+                              SystemChrome.setPreferredOrientations([
+                                DeviceOrientation.portraitDown,
+                                DeviceOrientation.portraitUp,
+                              ]);
                               setState(() {
                                 toothList.clear();
                                 for(var e in list){
-                                  toothList.add(FixedSizeTooth(index: e, onTap: (){}, height: 40, width: 40,),);
+                                  toothList.add(FixedSizeTooth(index: e, onTap: (){}, height: 40, width: 40, nontapable: false,),);
                                 }
                               });
                               widget.onAdd(list, textController.text, isChecked);

@@ -12,6 +12,7 @@ import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/custom_widgets/appointment_card.dart';
 import 'package:goa_dental_clinic/custom_widgets/custom_button.dart';
 import 'package:goa_dental_clinic/custom_widgets/file_input_card.dart';
+import 'package:goa_dental_clinic/custom_widgets/fixed_sized_tooth.dart';
 import 'package:goa_dental_clinic/custom_widgets/icon_text.dart';
 import 'package:goa_dental_clinic/custom_widgets/presciption_card.dart';
 import 'package:goa_dental_clinic/custom_widgets/prescription_input_card.dart';
@@ -68,11 +69,10 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    uid = auth.currentUser!.uid;
+    uid = widget.am.doctorUid;
+    // uid = auth.currentUser!.uid;
     nodeId = '${widget.am.patientUid}_${widget.am.appId}';
-    print(widget.am.pm);
     if (widget.itemNo != 0) {
-      print(widget.itemNo);
       autoShowCards(widget.itemNo, context);
     }
 
@@ -242,6 +242,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'month': widget.am.month,
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
 
     await firestore
@@ -261,6 +263,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
       'month': widget.am.month,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
 
     //uploading Treatment Plans
@@ -344,6 +348,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
       'month': widget.am.month,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
 
     //uploading to patient's history
@@ -365,6 +371,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
       'month': widget.am.month,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
 
     //uploading Prescriptions
@@ -478,6 +486,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'date': widget.am.date,
       'week': widget.am.week,
       'time': widget.am.time,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
   }
 
@@ -691,7 +701,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                           appId: widget.am.appId,
                           refresh: (appId) {
                             Navigator.pop(context);
-                          },
+                          }, plan: widget.am.plan, toothList: widget.am.toothList,
                         ),
                       ),
                     ),
@@ -744,6 +754,27 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     SizedBox(
                       height: 20,
                     ),
+                    Container(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kGrey),),
+                      width: double.infinity,
+                      padding: EdgeInsets.all(4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Plan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),),
+                          SizedBox(height: 4,),
+                          Text('${widget.am.plan}', style: TextStyle(fontSize: 16),),
+                          SizedBox(height: 8,),
+                          Wrap(
+                            children: widget.am.toothList.map((e){
+
+                              return FixedSizeTooth(index: e, onTap: (){}, nontapable: true, height: 40, width: 40,);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 12,),
                     !(tmList.isEmpty)
                         ? Text(
                             'Treatment Plans',

@@ -12,6 +12,7 @@ import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
+import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen4.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../classes/get_initials.dart';
@@ -58,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for(var patient in patients.docs){
 
+      try{
       if(DateTime.fromMillisecondsSinceEpoch(int.parse(patient['appId'])).day == DateTime.now().day) {
         final datas = await firestore.collection('Patients').get();
         PatientModel? pm;
@@ -84,6 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
             startTimeInMil: patient['startTimeInMil'],
             endTimeInMil: patient['endTimeInMil'],
             month: patient['month'],
+            plan: patient['plan'],
+            toothList: patient['toothList'],
             refresh: (appId) {
               late AppointmentCard card;
               appList.forEach((element) {
@@ -98,6 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             pm: pm,));
         // }
+      }
+      }
+      catch(e){
+        continue;
       }
     }
     appList.sort((a, b) => a.appId.compareTo(b.appId));
@@ -195,8 +203,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               InkWell(
                 onTap: (){
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: '1688834352945',)));
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen(status: 'not_normal',)));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen(status: 'not_normal',)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: 'alkdjkajdlkj',)));
                 },
                 child: Material(
                   borderRadius: BorderRadius.circular(12),

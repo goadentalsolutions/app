@@ -40,7 +40,7 @@ class _SearchBoxState extends State<SearchBox> {
                 Icons.search,
                 color: Colors.black,
               ),
-              suffixIcon: Icon(Icons.filter_alt_outlined),
+              suffixIcon: Image.asset('assets/tooth.png'),
               suffixIconColor: Colors.black,
               hintStyle: TextStyle(color: Colors.black.withOpacity(0.4))),
         ),

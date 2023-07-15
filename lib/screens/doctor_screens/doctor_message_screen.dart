@@ -77,7 +77,7 @@ class _DoctorMessageScreenState extends State<DoctorMessageScreen> {
                       pm: pm,
                       startTimeInMil: amm.startTimeInMil,
                       endTimeInMil: amm.endTimeInMil,
-                      month: amm.month),
+                      month: amm.month, plan: amm.plan, toothList : amm.toothList),
                 )));
 
     removeMsg(amm.msgId);
@@ -159,7 +159,7 @@ class _DoctorMessageScreenState extends State<DoctorMessageScreen> {
                                   msgId: msgId,
                                   startTimeInMil: msg['startTimeInMil'],
                                   endTimeInMil: msg['endTimeInMil'],
-                                  month: msg['month']),
+                                  month: msg['month'], plan: msg['plan'], toothList: msg['toothList'],),
                             ),
                           );
                         }

@@ -301,7 +301,6 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                         onPressed: () {
                           if (!(data1['patientName'] == "" ||
                               data1['gender'] == "" ||
-                              data1['dob'] == "" ||
                               data1['phone1'] == "phoneNumber")) {
                             pageController.nextPage(
                                 duration: Duration(milliseconds: 500),
@@ -339,7 +338,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                                 break;
                             }
                           }else{
-                            Alert(context, "Name, gender, DOB, Phone No. are mandatory fields!");
+                            Alert(context, "Name, gender, Phone No. are mandatory fields!");
                           }
                         },
                       ),

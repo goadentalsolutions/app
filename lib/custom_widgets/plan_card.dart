@@ -22,6 +22,8 @@ class PlanCard extends StatelessWidget {
                 return FixedSizeTooth(index: e, onTap: (){}, height: 40, width: 40,);
               }).toList(),
             ),
+            Divider(
+            ),
           ],
         ),
       ),

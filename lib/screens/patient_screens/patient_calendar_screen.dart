@@ -37,6 +37,7 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
   String? appId;
   List<Appointment> meetings = [];
   bool isLoading = true;
+  TextEditingController planController = TextEditingController();
 
   @override
   void initState() {
@@ -91,6 +92,8 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
           patientUid: patientUid,
           appId: appId.toString(),
           week: parser.getWeek(),
+          plan: planController.text,
+          toothList: [],
           msgId: DateTime
               .now()
               .millisecondsSinceEpoch

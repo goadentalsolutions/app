@@ -1,6 +1,7 @@
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:goa_dental_clinic/custom_widgets/custom_button.dart';
+import 'package:goa_dental_clinic/custom_widgets/suggestion_treatment_text_field.dart';
 import 'package:goa_dental_clinic/custom_widgets/text_dropdown.dart';
 import 'package:goa_dental_clinic/custom_widgets/treatment_text_field.dart';
 import 'package:goa_dental_clinic/models/prescription_model.dart';

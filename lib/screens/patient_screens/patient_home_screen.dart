@@ -93,6 +93,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               week: patient['week'],
               date: patient['date'],
               time: patient['time'],
+              plan: patient['plan'],
+              toothList: patient['toothList'],
               onMorePressed: (int itemNo) {},
               doctorName: patient['doctorName'],
               doctorUid: patient['doctorUid'],

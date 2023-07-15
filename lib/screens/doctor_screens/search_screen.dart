@@ -69,30 +69,23 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     
     return Scaffold(
+    appBar: AppBar(title: SearchBox(onChanged: (value){
+      setState(() {
+        searchTxt = value;
+        searchPatient();
+      },);},), backgroundColor: Colors.white, elevation: 0, centerTitle: false, automaticallyImplyLeading: false,),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: SingleChildScrollView(
             child: Column(
-              children: [
-                SearchBox(onChanged: (value){
-                  setState(() {
-                    searchTxt = value;
-                    searchPatient();
-                  });
-                }),
-                SizedBox(height: 12,),
-                // PatientCard(),
-                ListView(
-                  shrinkWrap: true,
-                  children: searchResults.map((e){
+              children: searchResults.map((e){
 
-                    return PatientCard(pm: e);
-                  }).toList(),
-                )
-              ],
+                return PatientCard(pm: e);
+              }).toList(),
             ),
           ),
+
         ),
       ),
     );

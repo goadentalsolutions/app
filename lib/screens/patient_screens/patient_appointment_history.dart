@@ -89,7 +89,7 @@ class _PatientAppointmentHistoryState extends State<PatientAppointmentHistory> {
                         startTimeInMil: app['startTimeInMil'],
                         month: app['month'],
                         endTimeInMil: app['endTimeInMil'],
-                        refresh: () {}),);
+                        refresh: () {}, plan: app['plan'], toothList: app['toothList'],),);
                   } catch (e) {
                     print(e);
                     continue;

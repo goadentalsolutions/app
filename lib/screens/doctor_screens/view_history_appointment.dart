@@ -23,6 +23,7 @@ import 'package:goa_dental_clinic/models/treatment_model.dart';
 import 'package:goa_dental_clinic/custom_widgets/note_input_card.dart';
 
 import '../../classes/alert.dart';
+import '../../custom_widgets/fixed_sized_tooth.dart';
 import '../../custom_widgets/image_des_container.dart';
 import '../../custom_widgets/treatment_plan_input_card.dart';
 import '../../custom_widgets/treatment_text_field.dart';
@@ -235,12 +236,32 @@ class _ViewHistoryAppointmentState extends State<ViewHistoryAppointment> {
                           endTimeInMil: widget.am.endTimeInMil,
                           refresh: (appId){
                             Navigator.pop(context);
-                          },
+                          }, plan: widget.am.plan, toothList: widget.am.toothList,
                         ),
                       ),
                     ),
                     SizedBox(
                       height: 16,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kGrey),),
+                      width: double.infinity,
+                      padding: EdgeInsets.all(4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Plan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),),
+                          SizedBox(height: 4,),
+                          Text('${widget.am.plan}', style: TextStyle(fontSize: 16),),
+                          SizedBox(height: 8,),
+                          Wrap(
+                            children: widget.am.toothList.map((e){
+
+                              return FixedSizeTooth(index: e, onTap: (){}, nontapable: true, height: 40, width: 40,);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(
                       height: !(tmList.isEmpty) ? 20 : 0,

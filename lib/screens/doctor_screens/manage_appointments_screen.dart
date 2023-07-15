@@ -41,44 +41,47 @@ class _ManageAppointmentsScreenState extends State<ManageAppointmentsScreen> {
     appList.clear();
 
     for (var app in patientApps.docs) {
-      // final datas = await firestore.collection('Patients').get();
-      // PatientModel? pm;
-      // for (var data in datas.docs) {
-      //   if (app['patientName'] == data['patientName'])
-      //     pm = GetPatientDetails().get(data);
-      // }
-      if (DateTime
-          .now()
-          .millisecondsSinceEpoch < double.parse(app['startTimeInMil'])){
-      appList.add(AppointmentCard(
-        size: MediaQuery.of(context).size,
-        patientName: app['patientName'],
-        week: app['week'],
-        date: app['date'],
-        time: app['time'],
-        onMorePressed: (int itemNo) {},
-        doctorName: app['doctorName'],
-        doctorUid: app['doctorUid'],
-        patientUid: app['patientUid'],
-        status: 'homescreen',
-        appId: app['appId'],
-        pm: null,
-        startTimeInMil: app['startTimeInMil'],
-        endTimeInMil: app['endTimeInMil'],
-        month: app['month'],
-        refresh: (appId){
-          late AppointmentCard card;
-            appList.forEach((element) {
-              if(element.appId == appId){
-                card = element;
-              }
-            });
-            setState(() {
-              if(card != null)
-              appList.remove(card);
-            });
-        },
-      ));
+      try {
+        if (DateTime
+            .now()
+            .millisecondsSinceEpoch < double.parse(app['startTimeInMil'])) {
+          appList.add(AppointmentCard(
+            size: MediaQuery
+                .of(context)
+                .size,
+            patientName: app['patientName'],
+            week: app['week'],
+            date: app['date'],
+            time: app['time'],
+            onMorePressed: (int itemNo) {},
+            doctorName: app['doctorName'],
+            doctorUid: app['doctorUid'],
+            patientUid: app['patientUid'],
+            status: 'homescreen',
+            appId: app['appId'],
+            pm: null,
+            startTimeInMil: app['startTimeInMil'],
+            endTimeInMil: app['endTimeInMil'],
+            month: app['month'],
+            plan: app['plan'],
+            toothList: app['toothList'],
+            refresh: (appId) {
+              late AppointmentCard card;
+              appList.forEach((element) {
+                if (element.appId == appId) {
+                  card = element;
+                }
+              });
+              setState(() {
+                if (card != null)
+                  appList.remove(card);
+              });
+            },
+          ));
+        }
+      }
+      catch(e){
+        continue;
       }
     }
     appList.sort((a, b) => a.appId.compareTo(b.appId));

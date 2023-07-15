@@ -23,6 +23,7 @@ import 'package:goa_dental_clinic/models/treatment_model.dart';
 import 'package:goa_dental_clinic/custom_widgets/note_input_card.dart';
 
 import '../../classes/alert.dart';
+import '../../custom_widgets/fixed_sized_tooth.dart';
 import '../../custom_widgets/image_des_container.dart';
 import '../../custom_widgets/treatment_plan_input_card.dart';
 import '../../custom_widgets/treatment_text_field.dart';
@@ -182,18 +183,22 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
   }
 
   getNote() async {
-    print(widget.am.doctorUid);
-    final notee = await firestore
-        .collection('Doctors')
-        .doc(widget.am.doctorUid)
-        .collection('Appointments')
-        .doc(nodeId)
-        .collection('Note')
-        .doc('note')
-        .get();
-    setState(() {
-      note = notee['note'];
-    });
+    try {
+      print(widget.am.doctorUid);
+      final notee = await firestore
+          .collection('Doctors')
+          .doc(widget.am.doctorUid)
+          .collection('Appointments')
+          .doc(nodeId)
+          .collection('Note')
+          .doc('note')
+          .get();
+      setState(() {
+        note = notee['note'];
+      });
+    }catch(E){
+      print("$E");
+    }
   }
 
   getImages() async {
@@ -238,6 +243,8 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
       'month': widget.am.month,
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
 
     await firestore
@@ -257,6 +264,8 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
       'month': widget.am.month,
       'startTimeInMil': widget.am.startTimeInMil,
       'endTimeInMil': widget.am.endTimeInMil,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
 
     //uploading Treatment Plans
@@ -431,6 +440,8 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
       'date': widget.am.date,
       'week': widget.am.week,
       'time': widget.am.time,
+      'plan': widget.am.plan,
+      'toothList': widget.am.toothList,
     });
   }
 
@@ -639,6 +650,8 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
                           appId: widget.am.appId,
                           startTimeInMil: widget.am.startTimeInMil,
                           endTimeInMil: widget.am.endTimeInMil,
+                          plan: widget.am.plan,
+                          toothList: widget.am.toothList,
                           refresh: (appId){
                             Navigator.pop(context);
                           },
@@ -690,6 +703,29 @@ class _ViewAppointmentScreenState extends State<ViewAppointmentScreen> {
                           ],
                         ),
                       ],
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kGrey),),
+                      width: double.infinity,
+                      padding: EdgeInsets.all(4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Plan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),),
+                          SizedBox(height: 4,),
+                          Text('${widget.am.plan}', style: TextStyle(fontSize: 16),),
+                          SizedBox(height: 8,),
+                          Wrap(
+                            children: widget.am.toothList.map((e){
+
+                              return FixedSizeTooth(index: e, onTap: (){}, nontapable: true, height: 40, width: 40,);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(
                       height: !(tmList.isEmpty) ? 20 : 0,

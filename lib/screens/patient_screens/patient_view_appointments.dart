@@ -509,6 +509,8 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
                           appId: widget.am.appId,
                           startTimeInMil: widget.am.startTimeInMil,
                           endTimeInMil: widget.am.endTimeInMil,
+                          plan: widget.am.plan,
+                          toothList: widget.am.toothList,
                           refresh: (appId){
                             Navigator.pop(context);
                           },
