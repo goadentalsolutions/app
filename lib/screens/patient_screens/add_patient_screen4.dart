@@ -49,7 +49,7 @@ class _AddPatientScreen4State extends State<AddPatientScreen4> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    uid = auth.currentUser!.uid;
+    // uid = auth.currentUser!.uid;
     historyController =  TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_){
       updateData();

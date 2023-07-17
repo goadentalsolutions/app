@@ -8,15 +8,16 @@ import '../../constants.dart';
 import '../../custom_widgets/appointment_card.dart';
 import '../../models/patient_model.dart';
 
-class ManageAppointmentsScreen extends StatefulWidget {
-  const ManageAppointmentsScreen({Key? key}) : super(key: key);
+class ViewPatientAppointments extends StatefulWidget {
+  ViewPatientAppointments({required this.uid});
+  String uid;
 
   @override
-  State<ManageAppointmentsScreen> createState() =>
-      _ManageAppointmentsScreenState();
+  State<ViewPatientAppointments> createState() =>
+      _ViewPatientAppointmentsScreenState();
 }
 
-class _ManageAppointmentsScreenState extends State<ManageAppointmentsScreen> {
+class _ViewPatientAppointmentsScreenState extends State<ViewPatientAppointments> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   String? uid, name;
@@ -26,14 +27,14 @@ class _ManageAppointmentsScreenState extends State<ManageAppointmentsScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    uid = auth.currentUser!.uid;
+    uid = widget.uid;
     getDetails();
     getAppointments(context);
   }
 
   getAppointments(context) async {
     final patientApps = await firestore
-        .collection('Doctors')
+        .collection('Patients')
         .doc(uid)
         .collection('Appointments')
         .get();
@@ -89,8 +90,8 @@ class _ManageAppointmentsScreenState extends State<ManageAppointmentsScreen> {
   }
 
   getDetails() async {
-    final data = await firestore.collection('Doctors').doc(uid).get();
-    name = data['name'];
+    final data = await firestore.collection('Patients').doc(uid).get();
+    name = data['patientName'];
     setState(() {});
   }
 
@@ -121,24 +122,24 @@ class _ManageAppointmentsScreenState extends State<ManageAppointmentsScreen> {
               children: [
                 (appList.isNotEmpty)
                     ? ListView.builder(
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: appList[index],
-                          );
-                        },
-                        itemCount: appList.length,
-                        shrinkWrap: true,
-                      )
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: appList[index],
+                    );
+                  },
+                  itemCount: appList.length,
+                  shrinkWrap: true,
+                )
                     : Container(
-                        child: Center(
-                          child: Text(
-                            'No Appointments as of now',
-                            style: TextStyle(fontSize: 18, color: kGrey),
-                          ),
-                          // child: SvgPicture.asset('svgs/doctors.svg', height: MediaQuery.of(context).size.height * 0.3, width: MediaQuery.of(context).size.width * 0.3,),
-                        ),
-                      ),
+                  child: Center(
+                    child: Text(
+                      'No Appointments as of now',
+                      style: TextStyle(fontSize: 18, color: kGrey),
+                    ),
+                    // child: SvgPicture.asset('svgs/doctors.svg', height: MediaQuery.of(context).size.height * 0.3, width: MediaQuery.of(context).size.width * 0.3,),
+                  ),
+                ),
               ],
             ),
           ),

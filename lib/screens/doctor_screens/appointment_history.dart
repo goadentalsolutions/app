@@ -70,7 +70,7 @@ class _AppointmentHistoryState extends State<AppointmentHistory> {
                   try {
                     String status = app['status'];
                     if(status != 'Cancelled')
-                    if(DateTime.now().millisecondsSinceEpoch > double.parse(app['startTimeInMil'])){
+                    if(DateTime.now().millisecondsSinceEpoch > double.parse(app['endTimeInMil'])){
                       status = 'completed';
                     }
                     appList.add(AppointmentHistoryCard(

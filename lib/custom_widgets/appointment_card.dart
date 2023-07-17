@@ -246,7 +246,7 @@ class _AppointmentCardState extends State<AppointmentCard> {
               ));
       },
       child: Container(
-        height: widget.size.height * 0.12,
+        height: widget.size.height * 0.18,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -288,149 +288,187 @@ class _AppointmentCardState extends State<AppointmentCard> {
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
+              child: Column(
                 children: [
                   Expanded(
-                    flex: 2,
-                    child: Container(
-                      padding: EdgeInsets.only(top: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: kGrey),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            '${widget.date}',
-                            style: TextStyle(
-                                fontSize: 28, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '${widget.week}',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 12,
-                  ),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Material(
-                            borderRadius: BorderRadius.circular(16),
-                            elevation: 3,
-                            child: Container(
-                              width: widget.size.width * 0.8 * 0.2,
-                              decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  borderRadius: BorderRadius.circular(16)),
-                              child: Center(
-                                child: Text(
-                                  '${widget.time}',
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            padding: EdgeInsets.only(top: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: kGrey),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${widget.date}',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 12),
+                                      fontSize: 28, fontWeight: FontWeight.bold),
                                 ),
-                              ),
+                                Text(
+                                  '${widget.week}',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(
-                            height: 4,
-                          ),
-                          Expanded(
-                            child: (widget.isDoc)
-                                ? Text(
-                                    '${widget.patientName}',
-                                    style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold),
-                                    maxLines: 1,
-                                  )
-                                : Text(
-                                    'Dr. ${widget.doctorName}',
-                                    style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold),
-                                    maxLines: 1,
+                        ),
+                        SizedBox(
+                          width: 12,
+                        ),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Material(
+                                  borderRadius: BorderRadius.circular(16),
+                                  elevation: 3,
+                                  child: Container(
+                                    width: widget.size.width * 0.8 * 0.2,
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(16)),
+                                    child: Center(
+                                      child: Text(
+                                        '${widget.time}',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 12),
+                                      ),
+                                    ),
                                   ),
-                            flex: 2,
-                          ),
-                          SizedBox(
-                            height: 4,
-                          ),
-                          Expanded(
-                            child: (widget.isDoc)
-                                ? Text('By Dr. ${widget.doctorName}')
-                                : Text(''),
-                            flex: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                    flex: 6,
-                  ),
-                  (int.parse(widget.appId) <
-                          DateTime.now().millisecondsSinceEpoch)
-                      ? Expanded(
-                          child: LottieBuilder.asset('anim/completed.json'),
-                        )
-                      : Container(),
-                  PopupMenuButton(
-                    itemBuilder: (context) => (widget.status ==
-                            'patienthomescreen')
-                        ? [
-                            PopupMenuItem(
-                              child: Text('View details'),
-                              onTap: () {
-                                if (widget.status == 'normal') {
-                                  widget.onMorePressed(4);
-                                } else {
-                                  Timer(Duration(milliseconds: 200), () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                PatientDetailsScreen(
-                                                  pm: widget.pm,
-                                                  uid: widget.patientUid,
-                                                )));
-                                  });
-                                }
-                              },
+                                ),
+                                SizedBox(
+                                  height: 4,
+                                ),
+                                Expanded(
+                                  child: (widget.isDoc)
+                                      ? Text(
+                                          '${widget.patientName}',
+                                          style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold),
+                                          maxLines: 1,
+                                        )
+                                      : Text(
+                                          'Dr. ${widget.doctorName}',
+                                          style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold),
+                                          maxLines: 1,
+                                        ),
+                                  flex: 2,
+                                ),
+                                SizedBox(
+                                  height: 4,
+                                ),
+                                Expanded(
+                                  child: (widget.isDoc)
+                                      ? Text('By Dr. ${widget.doctorName}')
+                                      : Text(''),
+                                  flex: 2,
+                                ),
+                              ],
                             ),
-                          ]
-                        : [
-                            PopupMenuItem(
-                              child: Text('Add treatment plan'),
-                              onTap: () {
-                                if (widget.status == 'normal') {
-                                  widget.onMorePressed(1);
-                                } else {
-                                  Timer(Duration(milliseconds: 200), () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ViewAppointmentScreen(
+                          ),
+                          flex: 6,
+                        ),
+                        (int.parse(widget.appId) <
+                                DateTime.now().millisecondsSinceEpoch)
+                            ? Expanded(
+                                child: LottieBuilder.asset('anim/completed.json'),
+                              )
+                            : Container(),
+                        PopupMenuButton(
+                          itemBuilder: (context) => (widget.status ==
+                                  'patienthomescreen')
+                              ? [
+                                  PopupMenuItem(
+                                    child: Text('View details'),
+                                    onTap: () {
+                                      if (widget.status == 'normal') {
+                                        widget.onMorePressed(4);
+                                      } else {
+                                        Timer(Duration(milliseconds: 200), () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      PatientDetailsScreen(
+                                                        pm: widget.pm,
+                                                        uid: widget.patientUid,
+                                                      )));
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ]
+                              : [
+                                  PopupMenuItem(
+                                    child: Text('Add treatment plan'),
+                                    onTap: () {
+                                      if (widget.status == 'normal') {
+                                        widget.onMorePressed(1);
+                                      } else {
+                                        Timer(Duration(milliseconds: 200), () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ViewAppointmentScreen(
+                                                        am: AppModel(
+                                                            patientName:
+                                                                widget.patientName,
+                                                            doctorName:
+                                                                widget.doctorName,
+                                                            date: widget.date,
+                                                            week: widget.week,
+                                                            time: widget.time,
+                                                            doctorUid:
+                                                                widget.doctorUid,
+                                                            patientUid:
+                                                                widget.patientUid,
+                                                            appId: widget.appId,
+                                                            pm: widget.pm,
+                                                            startTimeInMil:
+                                                                widget.startTimeInMil,
+                                                            endTimeInMil:
+                                                                widget.endTimeInMil,
+                                                            month: widget.month, plan: widget.plan, toothList: widget.toothList),
+                                                        itemNo: 1,
+                                                      )));
+                                        });
+                                      }
+                                    },
+                                    value: 1,
+                                  ),
+                                  PopupMenuItem(
+                                    child: Text('Add prescription'),
+                                    onTap: () {
+                                      if (widget.status == 'normal') {
+                                        widget.onMorePressed(2);
+                                      } else {
+                                        Timer(Duration(milliseconds: 200), () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewAppointmentScreen(
                                                   am: AppModel(
-                                                      patientName:
-                                                          widget.patientName,
-                                                      doctorName:
-                                                          widget.doctorName,
+                                                      patientName: widget.patientName,
+                                                      doctorName: widget.doctorName,
                                                       date: widget.date,
                                                       week: widget.week,
                                                       time: widget.time,
-                                                      doctorUid:
-                                                          widget.doctorUid,
-                                                      patientUid:
-                                                          widget.patientUid,
+                                                      doctorUid: widget.doctorUid,
+                                                      patientUid: widget.patientUid,
                                                       appId: widget.appId,
                                                       pm: widget.pm,
                                                       startTimeInMil:
@@ -438,109 +476,81 @@ class _AppointmentCardState extends State<AppointmentCard> {
                                                       endTimeInMil:
                                                           widget.endTimeInMil,
                                                       month: widget.month, plan: widget.plan, toothList: widget.toothList),
-                                                  itemNo: 1,
-                                                )));
-                                  });
-                                }
-                              },
-                              value: 1,
-                            ),
-                            PopupMenuItem(
-                              child: Text('Add prescription'),
-                              onTap: () {
-                                if (widget.status == 'normal') {
-                                  widget.onMorePressed(2);
-                                } else {
-                                  Timer(Duration(milliseconds: 200), () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ViewAppointmentScreen(
-                                            am: AppModel(
-                                                patientName: widget.patientName,
-                                                doctorName: widget.doctorName,
-                                                date: widget.date,
-                                                week: widget.week,
-                                                time: widget.time,
-                                                doctorUid: widget.doctorUid,
-                                                patientUid: widget.patientUid,
-                                                appId: widget.appId,
-                                                pm: widget.pm,
-                                                startTimeInMil:
-                                                    widget.startTimeInMil,
-                                                endTimeInMil:
-                                                    widget.endTimeInMil,
-                                                month: widget.month, plan: widget.plan, toothList: widget.toothList),
-                                            itemNo: 2,
-                                          ),
-                                        ));
-                                  });
-                                }
-                              },
-                            ),
-                            PopupMenuItem(
-                              child: Text('Add note'),
-                              onTap: () {
-                                if (widget.status == 'normal') {
-                                  widget.onMorePressed(3);
-                                } else {
-                                  Timer(Duration(milliseconds: 200), () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ViewAppointmentScreen(
-                                          am: AppModel(
-                                              patientName: widget.patientName,
-                                              doctorName: widget.doctorName,
-                                              date: widget.date,
-                                              week: widget.week,
-                                              time: widget.time,
-                                              doctorUid: widget.doctorUid,
-                                              patientUid: widget.patientUid,
-                                              appId: widget.appId,
-                                              pm: widget.pm,
-                                              startTimeInMil:
-                                                  widget.startTimeInMil,
-                                              endTimeInMil: widget.endTimeInMil,
-                                              month: widget.month, plan: widget.plan, toothList: widget.toothList),
-                                          itemNo: 3,
-                                        ),
-                                      ),
-                                    );
-                                  });
-                                }
-                              },
-                            ),
-                            PopupMenuItem(
-                              child: Text('View details'),
-                              onTap: () {
-                                if (widget.status == 'normal') {
-                                  widget.onMorePressed(4);
-                                } else {
-                                  Timer(Duration(milliseconds: 200), () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                PatientDetailsScreen(
-                                                  pm: widget.pm,
-                                                  uid: widget.patientUid,
-                                                )));
-                                  });
-                                }
-                              },
-                            ),
-                            PopupMenuItem(
-                              child: Text('Cancel appointment'),
-                              onTap: () {
-                                deleteAppointment();
-                              },
-                            ),
-                          ],
-                    icon: Icon(Icons.more_vert),
+                                                  itemNo: 2,
+                                                ),
+                                              ));
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  PopupMenuItem(
+                                    child: Text('Add note'),
+                                    onTap: () {
+                                      if (widget.status == 'normal') {
+                                        widget.onMorePressed(3);
+                                      } else {
+                                        Timer(Duration(milliseconds: 200), () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ViewAppointmentScreen(
+                                                am: AppModel(
+                                                    patientName: widget.patientName,
+                                                    doctorName: widget.doctorName,
+                                                    date: widget.date,
+                                                    week: widget.week,
+                                                    time: widget.time,
+                                                    doctorUid: widget.doctorUid,
+                                                    patientUid: widget.patientUid,
+                                                    appId: widget.appId,
+                                                    pm: widget.pm,
+                                                    startTimeInMil:
+                                                        widget.startTimeInMil,
+                                                    endTimeInMil: widget.endTimeInMil,
+                                                    month: widget.month, plan: widget.plan, toothList: widget.toothList),
+                                                itemNo: 3,
+                                              ),
+                                            ),
+                                          );
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  PopupMenuItem(
+                                    child: Text('View details'),
+                                    onTap: () {
+                                      if (widget.status == 'normal') {
+                                        widget.onMorePressed(4);
+                                      } else {
+                                        Timer(Duration(milliseconds: 200), () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      PatientDetailsScreen(
+                                                        pm: widget.pm,
+                                                        uid: widget.patientUid,
+                                                      )));
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  PopupMenuItem(
+                                    child: Text('Cancel appointment'),
+                                    onTap: () {
+                                      deleteAppointment();
+                                    },
+                                  ),
+                                ],
+                          icon: Icon(Icons.more_vert),
+                        ),
+                      ],
+                    ),
                   ),
+                  Divider(color: kGrey,),
+                  SizedBox(height: 4,),
+                  Text('Plan: ${widget.plan}'),
                 ],
               ),
             ),

@@ -76,6 +76,8 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
     setState(() {
       // patientName = pref.getString('name');
       patientName = data['name'];
+      email = data['email'] ?? '';
+      phone1 = auth.currentUser!.phoneNumber!;
       isLoading = false;
 
     });
@@ -100,14 +102,15 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
   @override
   Widget build(BuildContext context) {
     var pm = pro.Provider.of<AddPatientProvider>(context).pm;
-    patientName = pm.patientName;
-    gender = pm.gender;
-    dobController.text = pm.dob;
-    dob = pm.dob;
-    email = pm.email;
-    phone1 = pm.phoneNumber1;
-    streetAddress = pm.streetAddress;
-
+    if(widget.status != 'normal') {
+      patientName = pm.patientName;
+      gender = pm.gender;
+      dobController.text = pm.dob;
+      dob = pm.dob;
+      email = pm.email;
+      phone1 = pm.phoneNumber1;
+      streetAddress = pm.streetAddress;
+    }
 
     return Container(
       child: isLoading ? Center(child: CircularProgressIndicator(color: kPrimaryColor,),) : SingleChildScrollView(
@@ -166,11 +169,20 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
             SizedBox(
               height: 32,
             ),
+            PatientTextField(title: 'Phone no.*: ', onChanged: (value){
+              setState(() {
+                phone1 = value;
+                updateData();
+              });
+            }, inputType: TextInputType.number, inputValue: phone1,),
+            SizedBox(
+              height: 16,
+            ),
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    'Date of birth*: ',
+                    'Date of birth: ',
                     style: TextStyle(color: kGrey, fontSize: 16),
                   ),
                 ),
@@ -189,17 +201,17 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
                         );
 
                         if (pickedDate != null) {
-                        setState(() {
-                          print(pickedDate);
-                          dob = DateFormat('yyyy-MM-dd').format(pickedDate!);
-                          // DateTime dateTime = DateTime(pickedDate!.year,
-                          //     pickedDate!.month, pickedDate!.day);
-                          // ageController.text = AgeCalculator
-                          //     .age(dateTime)
-                          //     .years
-                          //     .toString();
-                          dobController.text = dob!;
-                        });
+                          setState(() {
+                            print(pickedDate);
+                            dob = DateFormat('yyyy-MM-dd').format(pickedDate!);
+                            // DateTime dateTime = DateTime(pickedDate!.year,
+                            //     pickedDate!.month, pickedDate!.day);
+                            // ageController.text = AgeCalculator
+                            //     .age(dateTime)
+                            //     .years
+                            //     .toString();
+                            dobController.text = dob!;
+                          });
 
                         }
                         updateData();
@@ -216,15 +228,6 @@ class _AddPatientScreen1State extends State<AddPatientScreen1> {
                 ),
               ],
             ),
-            SizedBox(
-              height: 16,
-            ),
-            PatientTextField(title: 'Phone no.*: ', onChanged: (value){
-              setState(() {
-                phone1 = value;
-                updateData();
-              });
-            }, inputType: TextInputType.number, inputValue: phone1,),
             SizedBox(height: 32,),
             PatientTextField(title: 'Email Address', inputType: TextInputType.emailAddress, onChanged: (value){
               setState(() {

@@ -14,11 +14,13 @@ import 'package:goa_dental_clinic/custom_widgets/patient_text_field.dart';
 import 'package:goa_dental_clinic/custom_widgets/text_textfield_dropdown.dart';
 import 'package:goa_dental_clinic/custom_widgets/treatment_text_field.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
+import 'package:goa_dental_clinic/providers/user_provider.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/nav_screen.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen4.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/user_model.dart';
 import '../../providers/add_patient_provider.dart';
 import 'add_patient_screen1.dart';
 import 'add_patient_screen2.dart';
@@ -46,86 +48,133 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   List<String> data3 = [];
   File? fi;
   bool isLoading = false, dataUploading = false;
+  String accessToken = '';
+
+
+  createUser() async {
+    if(uid.isEmpty || uid == '') {
+      try {
+        accessToken = '${data1['patientName']}${data1['phoneNumber']}';
+        FirebaseAuth auth = await FirebaseAuth.instance;
+        await auth.createUserWithEmailAndPassword(email: '${accessToken}@gmail.com', password: '${accessToken}')
+            .then((credentials) {
+          print(credentials.user!.uid);
+        });
+        setState(() {
+          uid = auth.currentUser!.uid;
+        });
+        await auth.signOut();
+        await restoreCurrentUser();
+        print('UID: $uid');
+      } catch (e) {
+        print('asalj $e');
+      }
+    }
+    else
+    await uploadData();
+  }
+
+  restoreCurrentUser() async {
+    UserModel u = Provider.of<UserProvider>(context, listen: false).um;
+    // print(u.email);
+    FirebaseAuth auth = FirebaseAuth.instance;
+    print('1');
+    await auth.signInWithEmailAndPassword(email: u.email, password: u.pass);
+    print('2 ${auth.currentUser!.email}');
+    await uploadData();
+  }
 
   uploadData() async {
+    print('reached');
     setState(() {
       dataUploading = true;
     });
 
-    try {
-      setState(() {
-        isLoading = true;
-      });
-      if (data1 != null) {
-        print('cool');
+      try {
         try {
-          await firestore.collection('Patients').doc(uid).set({
-            'patientName': data1['patientName'],
-            'gender': data1['gender'],
-            'dob': data1['dob'],
-            'patientUid': uid,
-            'phoneNumber': data1['phoneNumber'],
-            'email': data1['email'],
-            'streetAddress': data1['streetAddress'],
-            'token': '',
+          setState(() {
+            isLoading = true;
+          });
+          if (data1 != null) {
+            print('cool');
+            try {
+              await firestore.collection('Patients').doc(uid).set({
+                'patientName': data1['patientName'],
+                'gender': data1['gender'],
+                'dob': data1['dob'],
+                'patientUid': uid,
+                'phoneNumber': data1['phoneNumber'],
+                'email': data1['email'],
+                'streetAddress': data1['streetAddress'],
+                'token': '',
+              }, SetOptions(merge: true));
+            } catch (e) {
+              print('$e');
+            }
+          }
+
+          if (data3.isNotEmpty || data3 != null) {
+            for (var disease in data3) {
+              await firestore
+                  .collection('Patients')
+                  .doc(uid)
+                  .collection('Medical History')
+                  .doc(disease)
+                  .set({'disease': disease.trim()});
+            }
+          }
+
+          String url = '';
+          if (fi != null && actualUrl == '') {
+            try {
+              url = await uploadImage();
+              await firestore.collection('Patients').doc(uid).set({
+                'profileUrl': url,
+              }, SetOptions(merge: true));
+            } catch (e) {
+              print(e);
+              Alert(context, e);
+            }
+          } else if (fi == null && actualUrl == '') {
+            await firestore.collection('Patients').doc(uid).set({
+              'profileUrl': '',
+            }, SetOptions(merge: true));
+          }
+          await firestore.collection('Users').doc(uid).set({
+            'setup': 2,
           }, SetOptions(merge: true));
+
+          if (widget.status != 'normal') {
+            await firestore.collection('Users').doc(uid).set({
+              'name': data1['patientName'].toString().trim(),
+              'phoneNumber': data1['phoneNumber'].toString().trim(),
+              'email': data1['email'].toString().trim(),
+              'role': 'patient',
+              'uid': uid,
+              'token': '',
+              'accessToken' : accessToken,
+              'setup': 2,
+            });
+          }
+
+          setState(() {
+            isLoading = false;
+            dataUploading = false;
+          });
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => TestScreen(patientUid: uid)));
         } catch (e) {
-          print('$e');
+          Alert(context, "ada $e");
         }
-      }
 
-      if (data3.isNotEmpty || data3 != null) {
-        for (var disease in data3) {
-          await firestore
-              .collection('Patients')
-              .doc(uid)
-              .collection('Medical History')
-              .doc(disease)
-              .set({'disease': disease.trim()});
-        }
-      }
-
-      String url = '';
-      if (fi != null && actualUrl == '') {
-        try {
-          url = await uploadImage();
-          await firestore.collection('Patients').doc(uid).set({
-            'profileUrl': url,
-          }, SetOptions(merge: true));
-        } catch (e) {
-          print(e);
-          Alert(context, e);
-        }
-      } else if (fi == null && actualUrl == '') {
-        await firestore.collection('Patients').doc(uid).set({
-          'profileUrl': '',
-        }, SetOptions(merge: true));
-      }
-      await firestore.collection('Users').doc(uid).set({
-        'setup': 2,
-      }, SetOptions(merge: true));
-
-      if (widget.status != 'normal') {
-        await firestore.collection('Users').doc(uid).set({
-          'name': data1['patientName'].toString().trim(),
-          'phoneNumber': data1['phoneNumber'].toString().trim(),
-          'email': data1['email'].toString().trim(),
-          'role': 'patient',
-          'uid': uid,
-          'token': '',
-          'setup': 2,
+      }catch(e){
+        Alert(context, e);
+        setState(() {
+          isLoading = false;
+          dataUploading = false;
         });
       }
 
-      setState(() {
-        isLoading = false;
-        dataUploading = false;
-      });
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => TestScreen(patientUid: uid)));
-    } catch (e) {
-      Alert(context, "ada $e");
-    }
   }
 
   Future<String> uploadImage() async {
@@ -147,14 +196,17 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    if (widget.status == 'normal')
+    if (widget.status == 'normal') {
       uid = auth.currentUser!.uid;
-    else
-      uid = DateTime.now().millisecondsSinceEpoch.toString();
+    }
+    else {
+      uid = '';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -173,7 +225,22 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                           color: Colors.black,
                         ),
                         onTap: () {
-                          Navigator.pop(context);
+                          showDialog(context: context, builder: (context) {
+
+                            return AlertDialog(
+                              title: Text('Are you sure ?',),
+                              content: Text('Going back might erase patient\'s data'),
+                              actions: [
+                                ElevatedButton(onPressed: (){
+                                  Navigator.pop(context);
+                                  Navigator.pop(context);
+                                }, child: Text('YES'),),
+                                ElevatedButton(onPressed: (){
+                                  Navigator.pop(context);
+                                }, child: Text('NO'),),
+                              ],
+                            );
+                          });
                         },
                       ),
                       SizedBox(
@@ -309,7 +376,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
 
                             if (pageIndex == 2) {
                               if(!dataUploading)
-                              uploadData();
+                              createUser();
                             }
                             switch (pageIndex) {
                               case 0:

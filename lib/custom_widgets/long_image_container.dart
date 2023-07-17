@@ -35,10 +35,8 @@ class LongImageContainer extends StatelessWidget {
                 height: size.height * 0.2,
                 width: size.width * 0.3,
                 padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: Colors.blue),
-                child: SvgPicture.asset(
-                  '$imgAddress',
-                )),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: Colors.white, border: Border.all(color: kGrey)),
+                child: Image.asset('$imgAddress'),),
             SizedBox(width: 8,),
             Expanded(
               child: Column(

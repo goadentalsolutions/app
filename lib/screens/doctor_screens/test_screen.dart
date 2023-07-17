@@ -16,8 +16,9 @@ import '../../models/plan_model.dart';
 import '../../models/pre_model.dart';
 
 class TestScreen extends StatefulWidget {
-  TestScreen({required this.patientUid});
+  TestScreen({required this.patientUid, this.status = 'normal'});
   String patientUid;
+  String status;
 
   @override
   State<TestScreen> createState() => _TestScreenState();
@@ -37,6 +38,7 @@ class _TestScreenState extends State<TestScreen> {
   List<PreModel> selectedPreList = [];
   String title = '', des = '';
   bool isChecked = false;
+  bool isLoading = false;
 
   createCard() {
     showDialog(
@@ -188,7 +190,6 @@ class _TestScreenState extends State<TestScreen> {
       });
     }
 
-
     for (var pre in selectedPreList) {
       firestore
           .collection('Patients')
@@ -217,11 +218,37 @@ class _TestScreenState extends State<TestScreen> {
     addInitialCards();
   }
 
-  addInitialCards() {
+  addInitialCards() async {
     setState(() {
-      var list = Provider.of<AddPlanProvider>(context, listen: false).pList;
-      var list2 = Provider.of<AddPreProvider>(context, listen: false).pList;
+      isLoading = true;
+    });
+    var list = Provider.of<AddPlanProvider>(context, listen: false).pList;
+    var list2 = Provider.of<AddPreProvider>(context, listen: false).pList;
 
+    if(widget.status != 'normal') {
+      list.clear();
+      list2.clear();
+      final data = await firestore.collection('Patients')
+          .doc(widget.patientUid)
+          .collection('Plans')
+          .get();
+      final data2 = await firestore.collection('Patients').doc(
+          widget.patientUid).collection('Plan Prescriptions').get();
+      for (var plan in data.docs) {
+        list.add(
+          PlanModel(plan: plan['plan'],
+              toothList: plan['toothList'],
+              isChecked: true),
+        );
+      }
+      for (var pre in data2.docs) {
+        list2.add(
+          PreModel(title: pre['title'], des: pre['des'], isChecked: true),
+        );
+      }
+    }
+
+    setState(() {
       planList.add(
         PlanModel(plan: 'Scalling and polishing', toothList: []),
       );
@@ -302,6 +329,7 @@ class _TestScreenState extends State<TestScreen> {
         if (pre.isChecked) selectedPreList.add(pre);
       }
 
+      isLoading = false;
     });
   }
 
@@ -317,12 +345,12 @@ class _TestScreenState extends State<TestScreen> {
         onPressed: () {
           save();
         },
-        child: Icon(Icons.save),
+        child: isLoading ? Center(child: CircularProgressIndicator(color: Colors.white,)) : Icon(Icons.save),
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: SingleChildScrollView(
+          child: !isLoading ? SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -456,7 +484,7 @@ class _TestScreenState extends State<TestScreen> {
                 ),
               ],
             ),
-          ),
+          ) : Center(child: CircularProgressIndicator(color: kPrimaryColor,),),
         ),
       ),
     );

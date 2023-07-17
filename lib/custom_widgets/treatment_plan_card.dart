@@ -11,10 +11,11 @@ class TreatmentPlanCard extends StatefulWidget {
       {required this.tm,
       this.size,
       required this.addFunc,
-      required this.editFunc});
+      required this.editFunc, this.isPatient = false});
   TreatmentModel tm;
   Size? size;
   Function editFunc, addFunc;
+  bool isPatient;
 
   @override
   State<TreatmentPlanCard> createState() => _TreatmentPlanCardState();
@@ -129,14 +130,17 @@ class _TreatmentPlanCardState extends State<TreatmentPlanCard> {
                 SizedBox(
                   width: 8,
                 ),
-                InkWell(
-                  child: Icon(
-                    Icons.edit,
-                    color: kGrey,
+                Visibility(
+                  visible: !widget.isPatient,
+                  child: InkWell(
+                    child: Icon(
+                      Icons.edit,
+                      color: kGrey,
+                    ),
+                    onTap: () {
+                      widget.editFunc(widget.tm);
+                    },
                   ),
-                  onTap: () {
-                    widget.editFunc(widget.tm);
-                  },
                 ),
               ],
             ),

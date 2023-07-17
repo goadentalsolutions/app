@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:goa_dental_clinic/classes/alert.dart';
 import 'package:goa_dental_clinic/classes/get_patient_details.dart';
 import 'package:goa_dental_clinic/classes/pref.dart';
 import 'package:goa_dental_clinic/constants.dart';
@@ -59,6 +60,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    patientName = '';
     uid = auth.currentUser!.uid;
     getDoctors();
     getPatients();
@@ -164,6 +166,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
         planList.add(DropDownValueModel(name: plan['plan'], value: PlanModel(plan: plan['plan'], toothList: plan['toothList'])));
       }
     });
+
+    if(planList.isEmpty){
+      planList.add(DropDownValueModel(name: 'Checkup', value: PlanModel(plan: 'checkup', toothList: [])));
+    }
   }
 
   @override
@@ -214,10 +220,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       searchDecoration: InputDecoration(hintText: 'Search'),
                       onChanged: (value) async {
                         setState(() {
-                          DropDownValueModel val = value;
-                          patientName = val.name;
-                          patientUid = val.value;
-                          print(patientUid);
+                          if(value != '') {
+                            DropDownValueModel val = value;
+                            patientName = val.name;
+                            patientUid = val.value;
+                            print(patientUid);
+                          }
+                          else{
+                            patientName = '';
+                            patientUid = '';
+                          }
                         });
                         await getPlans();
                       },
@@ -232,7 +244,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: SfCalendar(
                 view: CalendarView.week,
                 dataSource: MeetingDataSource(meetings),
-                onTap: (details) {
+                onTap: patientName.isEmpty ? (details){
+                  Alert(context, 'Select patient');
+                } : (details) {
                   var parser = DateTimeParser(details.date.toString());
                   // creatingEvent(details!.date! , DateTime.now());
                   appId = DateTime.parse(details.date.toString()).millisecondsSinceEpoch.toString();

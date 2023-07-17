@@ -13,6 +13,7 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: (){
+        if(!isLoading)
         onPressed();
       },
       child: Container(

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
+import 'package:goa_dental_clinic/screens/patient_screens/token_login_screen.dart';
 import 'package:goa_dental_clinic/screens/register_screen.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:pinput/pinput.dart';
@@ -49,8 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     setState(() {
       _comingSms = comingSms!;
-      print("====>Message: ${_comingSms}");
-      print("${_comingSms[32]}");
       otpController.text = _comingSms[0] + _comingSms[1] + _comingSms[2] + _comingSms[3]
           + _comingSms[4] + _comingSms[5]; //used to set the code in the message to a string and setting it to a textcontroller. message length is 38. so my code is in string index 32-37.
     });
@@ -273,37 +272,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   visible: codeSent,
                 ),
-                // PinCodeTextField(
-                //   appContext: context,
-                //   pastedTextStyle: TextStyle(
-                //     color: Colors.green.shade600,
-                //     fontWeight: FontWeight.bold,
-                //   ),
-                //   length: 6,
-                //   obscureText: false,
-                //   animationType: AnimationType.fade,
-                //   cursorColor: Colors.black,
-                //   animationDuration: Duration(milliseconds: 300),
-                //   enableActiveFill: true,
-                //   controller: textEditingController1,
-                //   keyboardType: TextInputType.number,
-                //   boxShadows: [
-                //     BoxShadow(
-                //       offset: Offset(0, 1),
-                //       color: Colors.black12,
-                //       blurRadius: 10,
-                //     )
-                //   ],
-                //   onCompleted: (v) {
-                //     //do something or move to next screen when code complete
-                //   },
-                //   onChanged: (value) {
-                //     print(value);
-                //     setState(() {
-                //       print('$value');
-                //     });
-                //   },
-                // ),
                 Visibility(
                   child: Pinput(
                     length: 6,
@@ -349,7 +317,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   visible: isVerifyButtonVisible,
                 ),
-
+                SizedBox(height: 8,),
+                Align(alignment: AlignmentDirectional.center, child: InkWell(onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => TokenLoginScreen()));
+                },child: Text('Login with access token', style: TextStyle(color: kPrimaryColor, fontSize: 16, fontWeight: FontWeight.w500),))),
                 SizedBox(
                   height: 16,
                 ),

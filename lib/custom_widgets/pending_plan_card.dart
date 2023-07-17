@@ -7,10 +7,11 @@ import 'package:goa_dental_clinic/models/plan_model.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/calendar_screen2.dart';
 
 class PendingPlanCard extends StatelessWidget {
-  PendingPlanCard({required this.plan, required this.toothList, required this.pm});
+  PendingPlanCard({required this.plan, required this.toothList, required this.pm, this.hideButton = false});
   String plan;
   PatientModel pm;
   List<dynamic> toothList;
+  bool hideButton;
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +29,12 @@ class PendingPlanCard extends StatelessWidget {
                 children: [
                   Text('${plan}'),
                   Spacer(),
-                  InkWell(
+                  !hideButton ? InkWell(
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => CalendarScreen2(pm: pm, planModel: PlanModel(plan: plan, toothList: toothList),),),);
                     },
                     child: CircleAvatar(child: Icon(Icons.add, color: Colors.white,), radius: 15, backgroundColor: kPrimaryColor,),
-                  ),
+                  ) : Container(),
                 ],
               ),
               Wrap(

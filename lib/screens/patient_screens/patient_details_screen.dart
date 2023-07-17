@@ -1,27 +1,41 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:goa_dental_clinic/classes/alert.dart';
 import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/custom_widgets/custom_button.dart';
 import 'package:goa_dental_clinic/custom_widgets/done_plan_card.dart';
+import 'package:goa_dental_clinic/custom_widgets/image_des_container.dart';
 import 'package:goa_dental_clinic/custom_widgets/image_viewer.dart';
 import 'package:goa_dental_clinic/custom_widgets/pending_plan_card.dart';
+import 'package:goa_dental_clinic/custom_widgets/pre_card.dart';
+import 'package:goa_dental_clinic/custom_widgets/selection_prescription_card.dart';
 import 'package:goa_dental_clinic/models/image_model.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
+import 'package:goa_dental_clinic/screens/patient_screens/view_patient_appointments.dart';
+import 'package:toast/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../classes/get_patient_details.dart';
+import '../../custom_widgets/file_input_card.dart';
+import '../../custom_widgets/image_container.dart';
 import '../../models/plan_model.dart';
 import '../../models/pre_model.dart';
+import 'package:fluttertoast/fluttertoast.dart' as flut;
 
 class PatientDetailsScreen extends StatefulWidget {
-  PatientDetailsScreen({required this.pm, this.uid = ''});
+  PatientDetailsScreen(
+      {required this.pm, this.uid = '', this.isPatient = false, this.showBackIcon = true});
   PatientModel? pm;
   String uid;
+  bool isPatient;
+  bool showBackIcon;
 
   @override
   State<PatientDetailsScreen> createState() => _PatientDetailsScreenState();
@@ -29,6 +43,7 @@ class PatientDetailsScreen extends StatefulWidget {
 
 class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   bool isLoading = false;
+  bool isImgUploading = false;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   List<String> medHisList = [];
@@ -36,6 +51,8 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   List<PlanModel> pendingPlanList = [];
   List<PlanModel> donePlanList = [];
   List<PreModel> preList = [];
+  List<ImageModel> imList = [];
+  String accessToken = 'No token';
 
   getMedicalHistory() async {
     setState(() {
@@ -56,19 +73,22 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       isLoading = false;
     });
   }
-  
-  getPreList() async {
-    
-    final data = await firestore.collection('Patient').doc(widget.pm!.patientUid).collection('Plan Prescriptions').get();
 
+  getPreList() async {
+    final data = await firestore
+        .collection('Patients')
+        .doc(widget.uid)
+        .collection('Plan Prescriptions')
+        .get();
+
+    print(widget.uid);
     setState(() {
-      for(var pre in data.docs){
+      for (var pre in data.docs) {
         preList.add(
           PreModel(title: pre['title'], des: pre['des']),
         );
       }
     });
-
   }
 
   @override
@@ -78,64 +98,83 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     if (widget.pm == null) {
       getDetails();
     }
+    checkRole();
+    getAccessToken();
     getMedicalHistory();
     getDonePendingPlans();
+    getPreList();
+    getFiles();
+  }
+
+  getAccessToken() async {
+    final data = await firestore.collection('Users').doc(widget.uid).get();
+
+    accessToken = data['accessToken'];
+  }
+
+  checkRole() async {
+    final data = await firestore
+        .collection('Users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get();
+    if (data['role'] != 'doctor') {
+      widget.isPatient = true;
+    }
   }
 
   getDetails() async {
-    print('ada');
     setState(() {
       isLoading = true;
     });
     final datas = await firestore.collection('Patients').doc(widget.uid).get();
     widget.pm = GetPatientDetails().get(datas);
-    // if (widget.pm!.profileUrl == '')
-    //   profileUrl = '';
-    // else
-    //   profileUrl = widget.pm!.profileUrl;
-
     setState(() {
       isLoading = false;
     });
   }
 
-  
   getDonePendingPlans() async {
+    final apps = await firestore
+        .collection('Patients')
+        .doc(widget.uid)
+        .collection('Appointments')
+        .get();
+    final plans = await firestore
+        .collection('Patients')
+        .doc(widget.uid)
+        .collection('Plans')
+        .get();
 
-    final apps = await firestore.collection('Patients').doc(widget.uid).collection('Appointments').get();
-    final plans = await firestore.collection('Patients').doc(widget.uid).collection('Plans').get();
-
-      for(var plan in plans.docs){
-        var value = true;
-        for(var app in apps.docs){
-          if(app['plan'] == plan['plan']){
-            value = false;
-            if (DateTime
-                  .now()
-                  .millisecondsSinceEpoch < double.parse(app['endTimeInMil'])){
-              //pending
-              pendingPlanList.add(PlanModel(plan: plan['plan'], toothList: plan['toothList']));
-            }
-            else{
-              donePlanList.add(PlanModel(plan: plan['plan'], toothList: plan['toothList']));
-            }
+    for (var plan in plans.docs) {
+      var value = true;
+      for (var app in apps.docs) {
+        if (app['plan'] == plan['plan']) {
+          value = false;
+          if (DateTime.now().millisecondsSinceEpoch <
+              double.parse(app['endTimeInMil'])) {
+            //pending
+            pendingPlanList.add(
+                PlanModel(plan: plan['plan'], toothList: plan['toothList']));
+          } else {
+            donePlanList.add(
+                PlanModel(plan: plan['plan'], toothList: plan['toothList']));
           }
         }
-        if(value){
-          pendingPlanList.add(PlanModel(plan: plan['plan'], toothList: plan['toothList']));
-        }
       }
+      if (value) {
+        pendingPlanList
+            .add(PlanModel(plan: plan['plan'], toothList: plan['toothList']));
+      }
+    }
 
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   sendEmail(email, subject, body) async {
     Uri mail = Uri.parse("mailto:$email?subject=$subject&body=$body");
     if (await launchUrl(mail)) {
       //email app opened
-    }else{
+    } else {
       Alert(context, 'Error: Invaid email');
       //email app is not opened
     }
@@ -149,14 +188,76 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
         await FlutterPhoneDirectCaller.callNumber("+$number");
       else
         await FlutterPhoneDirectCaller.callNumber("+91$number");
-    }
-    catch(e){
+    } catch (e) {
       Alert(context, "Error: $e");
     }
   }
 
+  getFiles() async {
+    setState(() {
+      isLoading = true;
+    });
+    final data = await firestore.collection('Patients').doc(widget.uid).collection('Files').get();
+
+    setState(() {
+      imList.clear();
+      for(var pic in data.docs){
+        imList.add(ImageModel(url: pic['url'], description: pic['des']));
+      }
+    });
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  uploadImage(file, des) async {
+    try {
+      if (file != null) {
+        setState(() {
+          isImgUploading = true;
+        });
+        late UploadTask ut;
+        FirebaseStorage storage = FirebaseStorage
+            .instance;
+
+        ut = storage.ref().child('images').child(
+            DateTime
+                .now()
+                .millisecondsSinceEpoch
+                .toString()).putFile(file);
+        var snapshot = await ut
+            .whenComplete(() {});
+
+        String url = await snapshot.ref
+            .getDownloadURL();
+        imList.add(ImageModel(
+            url: url, description: des));
+        setState;
+        await firestore.collection('Patients').doc(
+            widget.uid).collection('Files').doc(
+            des).set(
+            {
+              'url': url,
+              'des': des,
+            }
+        );
+        setState(() {
+          isImgUploading = false;
+        });
+        print(url);
+      }
+    }catch(e){
+      Alert(context, e);
+      setState(() {
+        isImgUploading = false;
+      });
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -168,7 +269,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                       children: [
                         Row(
                           children: [
-                            InkWell(
+                            widget.showBackIcon ? InkWell(
                               child: Icon(
                                 Icons.arrow_back_ios_new_outlined,
                                 color: Colors.black,
@@ -176,9 +277,12 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                               onTap: () {
                                 Navigator.pop(context);
                               },
+                            ) : Container(
+                              height: 1,
+                              width: 1,
                             ),
                             SizedBox(
-                              width: 8,
+                              width: widget.showBackIcon ? 8 : 0,
                             ),
                             (widget.pm!.profileUrl == '')
                                 ? InkWell(
@@ -202,7 +306,8 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                                 : InkWell(
                                     child: CircleAvatar(
                                       backgroundImage:
-                                          CachedNetworkImageProvider(widget.pm!.profileUrl,
+                                          CachedNetworkImageProvider(
+                                              widget.pm!.profileUrl,
                                               errorListener: () {}),
                                     ),
                                     onTap: () {
@@ -221,25 +326,57 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             Text(
                               "${widget.pm?.patientName}",
                               style: TextStyle(
-                                overflow: TextOverflow.ellipsis,
-                                  fontSize: 28, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold),
                             ),
+                            Spacer(),
+                            ElevatedButton(onPressed: (){
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => ViewPatientAppointments(uid: widget.uid)));
+                            }, child: Text('View Appointments')),
                           ],
                         ),
-                        SizedBox(
-                          height: 12,
-                        ),
+                        SizedBox(height: 12,),
                         ExpansionTile(
                           title: Text(
-                            'Personal details',
+                            'Access Token',
                             style: TextStyle(fontSize: 20),
                           ),
                           children: [
-                            RowText(
-                                title: 'Date of birth: ',
-                                content: widget.pm!.dob),
+                            InkWell(child: Text('$accessToken', style: TextStyle(fontSize: 16, color: Colors.blue),), onTap: () async {
+                              //copy
+                              await  Clipboard.setData(ClipboardData(text: accessToken));
+                              flut.Fluttertoast.showToast(
+                                  msg: "Access Token Copied!",
+                                  toastLength: flut.Toast.LENGTH_LONG,
+                                  gravity: ToastGravity.BOTTOM,
+                                  timeInSecForIosWeb: 2,
+                                  backgroundColor: Colors.black,
+                                  textColor: Colors.white,
+                                  fontSize: 16.0
+                              );
+                            },),
+                            SizedBox(height: 8,),
                           ],
                           initiallyExpanded: true,
+                        ),
+                        SizedBox(
+                          height: widget.pm!.dob.isNotEmpty ? 12 : 0,
+                        ),
+                        Visibility(
+                          visible: widget.pm!.dob.isNotEmpty,
+                          child: ExpansionTile(
+                            title: Text(
+                              'Personal details',
+                              style: TextStyle(fontSize: 20),
+                            ),
+                            children: [
+                              RowText(
+                                  title: 'Date of birth: ',
+                                  content: widget.pm!.dob),
+                            ],
+                            initiallyExpanded: true,
+                          ),
                         ),
                         SizedBox(
                           height: 12,
@@ -252,17 +389,28 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                           ),
                           children: [
                             RowText(
-                                title: 'Phone Number: ',
-                                content: widget.pm!.phoneNumber1, func: (){
-                                  call(widget.pm!.phoneNumber1);
-                            }, fontColor: Colors.blue,),
-                            (widget.pm!.email.isNotEmpty) ? RowText(
-                                title: 'Email: ', content: widget.pm!.email, func: (){
-                                  sendEmail(widget.pm!.email, "", "");
-                            }, fontColor: Colors.blue,) : Container(),
-                            (widget.pm!.streetAddress.isNotEmpty) ? RowText(
-                                title: 'Street Address: ',
-                                content: widget.pm!.streetAddress) : Container(),
+                              title: 'Phone Number: ',
+                              content: widget.pm!.phoneNumber1,
+                              func: () {
+                                call(widget.pm!.phoneNumber1);
+                              },
+                              fontColor: Colors.blue,
+                            ),
+                            (widget.pm!.email.isNotEmpty)
+                                ? RowText(
+                                    title: 'Email: ',
+                                    content: widget.pm!.email,
+                                    func: () {
+                                      sendEmail(widget.pm!.email, "", "");
+                                    },
+                                    fontColor: Colors.blue,
+                                  )
+                                : Container(),
+                            (widget.pm!.streetAddress.isNotEmpty)
+                                ? RowText(
+                                    title: 'Street Address: ',
+                                    content: widget.pm!.streetAddress)
+                                : Container(),
                           ],
                         ),
                         SizedBox(
@@ -293,27 +441,117 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                         SizedBox(
                           height: 12,
                         ),
-                        ExpansionTile(initiallyExpanded: true, title: Text("Plans", style: TextStyle(fontSize: 20)),
-                        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                        expandedAlignment: Alignment.centerLeft,
-                        children: pendingPlanList.map((e){
-
-                          return PendingPlanCard(plan: e.plan, toothList: e.toothList, pm: widget.pm!,);
-                        }).toList(),),
+                        ExpansionTile(
+                          initiallyExpanded: true,
+                          title: Text("Plans", style: TextStyle(fontSize: 20)),
+                          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                          expandedAlignment: Alignment.centerLeft,
+                          children: pendingPlanList.map((e) {
+                            return PendingPlanCard(
+                              plan: e.plan,
+                              toothList: e.toothList,
+                              pm: widget.pm!,
+                              hideButton: widget.isPatient,
+                            );
+                          }).toList(),
+                        ),
                         SizedBox(
                           height: 12,
                         ),
-                        ExpansionTile(initiallyExpanded: true, title: Text("Completed Plans", style: TextStyle(fontSize: 20)),
+                        ExpansionTile(
+                          initiallyExpanded: true,
+                          title: Text("Completed Plans",
+                              style: TextStyle(fontSize: 20)),
                           expandedCrossAxisAlignment: CrossAxisAlignment.start,
                           expandedAlignment: Alignment.centerLeft,
-                          children: donePlanList.map((e){
+                          children: donePlanList.map((e) {
+                            return DonePlanCard(
+                              plan: e.plan,
+                              toothList: e.toothList,
+                              pm: widget.pm!,
+                            );
+                          }).toList(),
+                        ),
+                        SizedBox(
+                          height: 12,
+                        ),
+                        ExpansionTile(
+                          initiallyExpanded: true,
+                          title: Text("Prescriptions",
+                              style: TextStyle(fontSize: 20)),
+                          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                          expandedAlignment: Alignment.centerLeft,
+                          children: preList.map((e) {
+                            return PreCard(
+                              pm: e,
+                            );
+                          }).toList(),
+                        ),
+                        SizedBox(
+                          height: 12,
+                        ),
+                        ExpansionTile(
+                          initiallyExpanded: true,
+                          trailing: (!widget.isPatient) ? InkWell(
+                            child: CircleAvatar(
+                              child: isImgUploading ? Center(child: CircularProgressIndicator(color: Colors.white,),) : Icon(
+                                Icons.add,
+                                color: Colors.white,
+                              ),
+                              radius: 15,
+                              backgroundColor: kPrimaryColor,
+                            ),
+                            onTap: () {
 
-                            return DonePlanCard(plan: e.plan, toothList: e.toothList, pm: widget.pm!,);
-                          }).toList(),),
-                        SizedBox(height: 12,),
-                        CustomButton(text: 'ADD PLAN', backgroundColor: kPrimaryColor, onPressed: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: widget.pm!.patientUid)));
-                        }),
+                              if(!isImgUploading) {
+                                showDialog(context: context, builder: (
+                                    context) {
+                                  return FileInputCard(
+                                      size: size, onUpload: (file, des) async {
+                                    uploadImage(file, des);
+                                  });
+                                },);
+                              }else{
+
+                              }
+                            },
+                          ) : Icon(Icons.keyboard_arrow_down_outlined, color: kPrimaryColor,),
+                          title:
+                              Text("Photo's", style: TextStyle(fontSize: 20)),
+                          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                          expandedAlignment: Alignment.centerLeft,
+                          children: [Container(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: imList.map((e) {
+                                  return Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: ImageDesContainer(im: e),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),]
+                        ),
+                        SizedBox(
+                          height: 12,
+                        ),
+                        !widget.isPatient
+                            ? CustomButton(
+                                text: 'ADD PLAN & PRESCRIPTION',
+                                backgroundColor: kPrimaryColor,
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => TestScreen(
+                                                patientUid:
+                                                    widget.uid,
+                                                status: 'not-normal',
+                                              )));
+                                })
+                            : Container(),
                       ]),
                 )
               : Center(
@@ -328,7 +566,11 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 }
 
 class RowText extends StatelessWidget {
-  RowText({required this.title, required this.content, this.func, this.fontColor = Colors.black});
+  RowText(
+      {required this.title,
+      required this.content,
+      this.func,
+      this.fontColor = Colors.black});
   String title, content;
   Function? func;
   Color fontColor;
@@ -337,14 +579,19 @@ class RowText extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(title),
-      subtitle: InkWell(child: Text(content, style: TextStyle(fontSize: 16, color: fontColor),), onTap: (){
-        try {
-          func!();
-        }
-        catch(e){
-          print(e);
-        }
-      },),
+      subtitle: InkWell(
+        child: Text(
+          content,
+          style: TextStyle(fontSize: 16, color: fontColor),
+        ),
+        onTap: () {
+          try {
+            func!();
+          } catch (e) {
+            print(e);
+          }
+        },
+      ),
     );
   }
 }

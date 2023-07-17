@@ -21,6 +21,7 @@ import 'package:goa_dental_clinic/models/treatment_model.dart';
 import 'package:goa_dental_clinic/custom_widgets/note_input_card.dart';
 
 import '../../classes/alert.dart';
+import '../../custom_widgets/fixed_sized_tooth.dart';
 import '../../custom_widgets/image_des_container.dart';
 import '../../custom_widgets/treatment_plan_input_card.dart';
 import '../../custom_widgets/treatment_text_field.dart';
@@ -63,9 +64,7 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
     super.initState();
     uid = auth.currentUser!.uid;
     nodeId = '${widget.am.patientUid}_${widget.am.appId}';
-    print(widget.am.pm);
     if (widget.itemNo != 0) {
-      print(widget.itemNo);
       autoShowCards(widget.itemNo, context);
     }
     getTreatmentPlans();
@@ -122,7 +121,7 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
 
       final data = await firestore
           .collection('Doctors')
-          .doc(uid)
+          .doc(widget.am.doctorUid)
           .collection('Appointments')
           .doc(nodeId)
           .collection('TreatmentPlans')
@@ -517,10 +516,27 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
                         ),
                       ),
                     ),
-                    (imList.isEmpty && tmList.isEmpty && pmList.isEmpty && note.isEmpty) ? SizedBox(height: 100,) : Container(),
-                    (imList.isEmpty && tmList.isEmpty && pmList.isEmpty && note.isEmpty) ? Center(
-                      child: Text('Not much data here'),
-                    ) : Container(),
+                    SizedBox(height: 12,),
+                    Container(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kGrey),),
+                      width: double.infinity,
+                      padding: EdgeInsets.all(4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Plan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),),
+                          SizedBox(height: 4,),
+                          Text('${widget.am.plan}', style: TextStyle(fontSize: 16),),
+                          SizedBox(height: 8,),
+                          Wrap(
+                            children: widget.am.toothList.map((e){
+
+                              return FixedSizeTooth(index: e, onTap: (){}, nontapable: true, height: 40, width: 40,);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(
                       height: !(tmList.isEmpty) ? 20 : 0,
                     ),
@@ -546,6 +562,7 @@ class _PatientViewAppointmentScreenState extends State<PatientViewAppointmentScr
                                   padding: EdgeInsets.only(right: 8),
                                   child: TreatmentPlanCard(
                                     tm: tmList[index],
+                                    isPatient: true,
                                     size: size,
                                     editFunc: (TreatmentModel tm) {
                                       autoShowCards(1, context, tm: tm);

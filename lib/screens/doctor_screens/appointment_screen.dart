@@ -461,6 +461,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       });
     }
 
+    sendNotificationToPatient();
     notifyPatient(
         widget.am.pm?.token,
         'Scheduled an appointment on ${widget.am.date} ${widget.am.month} ${widget.am.week} at ${widget.am.time}.',
@@ -479,7 +480,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         .doc(msgId)
         .set({
       'msg':
-          'Scheduled appointment on ${widget.am}(${widget.am.week}) at ${widget.am.time}.',
+          'Scheduled appointment on ${widget.am.date}${widget.am.month}(${widget.am.week}) at ${widget.am.time}.',
       'msgId': msgId,
       'docUid': uid,
       'docName': widget.am.doctorName,

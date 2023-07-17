@@ -48,6 +48,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       isLoading = true;
     });
+
+    String pass = '';
+    if(role == 'doctor'){
+      pass = DateTime.now().millisecondsSinceEpoch.toString();
+      AuthCredential emailCredentials = EmailAuthProvider.credential(email: email, password: pass);
+    await auth.currentUser?.linkWithCredential(emailCredentials);
+  }
     await firestore.collection('Users').doc(uid).set(
       {
         'name' : name,
@@ -57,6 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'uid' : uid,
         'token' : userToken,
         'setup' : 1,
+        'pass': pass,
       }
     );
 

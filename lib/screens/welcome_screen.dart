@@ -28,7 +28,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     // auth.signOut();
 
+    // restore();
     nextScreen();
+  }
+
+  restore() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    await auth.signInWithEmailAndPassword(email: 'rounakpro18@gmail.com', password: '1689567476423');
+    print(auth.currentUser);
   }
 
   nextScreen() async {

@@ -20,7 +20,7 @@ class PatientCard extends StatelessWidget {
                   builder: (context) => PatientDetailsScreen(
                         pm: pm,
                         uid: pm.patientUid,
-                      )));
+                      ),),);
         },
         child: Container(
           height: size.height * 0.08,

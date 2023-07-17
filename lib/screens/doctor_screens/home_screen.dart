@@ -8,11 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/classes/get_patient_details.dart';
 import 'package:goa_dental_clinic/constants.dart';
+import 'package:goa_dental_clinic/models/user_model.dart';
+import 'package:goa_dental_clinic/providers/user_provider.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen4.dart';
+import 'package:googleapis/connectors/v1.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../classes/get_initials.dart';
@@ -23,6 +26,7 @@ import '../../custom_widgets/image_container.dart';
 import '../../custom_widgets/long_image_container.dart';
 import '../../custom_widgets/search_box.dart';
 import 'manage_appointments_screen.dart';
+import 'package:provider/provider.dart' as pro;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -119,11 +123,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       isLoading = true;
     });
-    final data = await firestore.collection('Doctors').doc(uid).get();
+    final data = await firestore.collection('Users').doc(uid).get();
     name = data['name'];
+    pro.Provider.of<UserProvider>(context, listen: false).setUser(UserModel(name: data['name'], email: data['email'], phoneNumber: data['phoneNumber'], pass: data['pass']));
     setState(() {
       isLoading = false;
     });
+
   }
 
 
@@ -164,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   LongImageContainer(
                       size: MediaQuery.of(context).size,
-                      imgAddress: 'svgs/doctors.svg',
+                      imgAddress: 'assets/logo.png',
                       text: 'All Appointments',
                       onPressed: (){
                         Navigator.push(context, MaterialPageRoute(builder: (context) => ManageAppointmentsScreen()));
@@ -203,8 +209,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               InkWell(
                 onTap: (){
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen(status: 'not_normal',)));
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: 'alkdjkajdlkj',)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen(status: 'not_normal',)));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => TestScreen(patientUid: 'alkdjkajdlkj',)));
                 },
                 child: Material(
                   borderRadius: BorderRadius.circular(12),

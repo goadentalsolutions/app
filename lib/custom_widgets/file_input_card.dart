@@ -12,7 +12,7 @@ import '../classes/alert.dart';
 class FileInputCard extends StatefulWidget {
   FileInputCard({required this.size, required this.onUpload});
   Size size;
-  Function onUpload;
+  Function(File, String) onUpload;
 
   @override
   State<FileInputCard> createState() => _FileInputCardState();
@@ -52,19 +52,6 @@ class _FileInputCardState extends State<FileInputCard> {
       Alert(context, e);
       print(e.toString());
     }
-    // uploadTask = data.putFile(file!);
-
-    // try {
-    //   final snapshot = await uploadTask?.whenComplete(() => {});
-    //   url = (await snapshot?.ref.getDownloadURL())!;
-    //   Alert(context, url);
-    //   setState(() {
-    //
-    //   });
-    // }
-    // catch(e){
-    //   print(e);
-    // }
   }
 
   @override
@@ -141,7 +128,7 @@ class _FileInputCardState extends State<FileInputCard> {
                 InkWell(
                   child: CustomButton(text: 'Upload', backgroundColor: kPrimaryColor, onPressed: (){
                     // uploadImage();
-                    widget.onUpload(file, controller.text);
+                    widget.onUpload(file!, controller.text);
                     Navigator.pop(context);
                   }),
                 ),
