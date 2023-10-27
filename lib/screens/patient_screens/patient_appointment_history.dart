@@ -5,6 +5,7 @@ import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/custom_widgets/appointment_history_card.dart';
 
 import '../../custom_widgets/appointment_card.dart';
+import '../login_screen.dart';
 
 class PatientAppointmentHistory extends StatefulWidget {
   const PatientAppointmentHistory({Key? key}) : super(key: key);
@@ -43,6 +44,13 @@ class _PatientAppointmentHistoryState extends State<PatientAppointmentHistory> {
     Size size = MediaQuery.of(context).size;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.logout),
+        backgroundColor: kPrimaryColor, onPressed: () async {
+        await auth.signOut();
+        Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      },
+      ),
       appBar: AppBar(
         elevation: 0,
         title: Text(
@@ -68,11 +76,17 @@ class _PatientAppointmentHistoryState extends State<PatientAppointmentHistory> {
                 appList.clear();
                 for (var app in snapshot.data!.docs) {
                   try {
+                    String orderId = app['orderId'];
                     String status = app['status'];
-                    if(status != 'Cancelled')
-                      if(DateTime.now().millisecondsSinceEpoch > double.parse(app['endTimeInMil'])){
-                        status = 'Completed';
+                    if(status != 'Cancelled') {
+                      if (DateTime
+                          .now()
+                          .millisecondsSinceEpoch >
+                          double.parse(app['endTimeInMil'])) {
+                        status = 'completed';
+                        orderId = app['endTimeInMil'];
                       }
+                    }
                     appList.add(AppointmentHistoryCard(
                         size: size,
                         patientName: app['patientName'],
@@ -86,6 +100,7 @@ class _PatientAppointmentHistoryState extends State<PatientAppointmentHistory> {
                         appId: app['appId'],
                         status: status,
                         pm: null,
+                      orderId: orderId,
                         startTimeInMil: app['startTimeInMil'],
                         month: app['month'],
                         endTimeInMil: app['endTimeInMil'],
@@ -95,6 +110,7 @@ class _PatientAppointmentHistoryState extends State<PatientAppointmentHistory> {
                     continue;
                   }
                 }
+                appList.sort((a, b) => b.orderId.compareTo(a.orderId));
 
                 return ListView.builder(
                     itemBuilder: (context, index) {

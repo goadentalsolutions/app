@@ -1,10 +1,10 @@
 import 'package:goa_dental_clinic/models/patient_model.dart';
 
-class AppModel {
+class AppHistoryModel {
   String date, time, week, patientName, doctorName, patientUid, doctorUid, appId, startTimeInMil, endTimeInMil, month, status;
   PatientModel? pm;
 
-  AppModel({
+  AppHistoryModel({
     required this.patientName,
     required this.doctorName,
     required this.date,

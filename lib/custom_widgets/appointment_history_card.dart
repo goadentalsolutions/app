@@ -11,6 +11,7 @@ import 'package:goa_dental_clinic/screens/doctor_screens/appointment_screen.dart
 import 'package:goa_dental_clinic/screens/doctor_screens/view_history_appointment.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/patient_view_appointments.dart';
 
+import '../classes/date_time_parser.dart';
 import '../constants.dart';
 import '../screens/doctor_screens/nav_screen.dart';
 import '../screens/doctor_screens/view_appointments.dart';
@@ -35,6 +36,7 @@ class AppointmentHistoryCard extends StatefulWidget {
     required this.endTimeInMil,
     this.isDoc = true,
     this.status = 'normal',
+    this.orderId = '0',
     required this.refresh,
     required this.plan,
     required this.toothList,
@@ -52,7 +54,7 @@ class AppointmentHistoryCard extends StatefulWidget {
       appId,
       startTimeInMil,
       endTimeInMil,
-      month, plan;
+      month, plan, orderId;
   List<dynamic> toothList = [];
   Function onMorePressed;
   PatientModel? pm;
@@ -265,59 +267,56 @@ class _AppointmentHistoryCardState extends State<AppointmentHistoryCard> {
                         SizedBox(
                           width: 12,
                         ),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Material(
-                                  elevation: 3,
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    width: widget.size.width * 0.8 * 0.2,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.circular(16)),
-                                    child: Center(
-                                        child: Text(
-                                      '${widget.time}',
-                                      style: TextStyle(color: Colors.white, fontSize: 12),
-                                    )),
-                                  ),
+                        Container(
+                          decoration: BoxDecoration(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Material(
+                                elevation: 3,
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      borderRadius: BorderRadius.circular(16)),
+                                  child: Center(
+                                      child: Text(
+                                        '${widget.time} - ${DateTimeParser(DateTime.fromMillisecondsSinceEpoch(int.parse(widget.endTimeInMil)).toString()).getFormattedTime()}',
+                                    style: TextStyle(color: Colors.white, fontSize: 12),
+                                  )),
                                 ),
-                                SizedBox(
-                                  height: 4,
-                                ),
-                                Expanded(
-                                  child: (widget.isDoc)
-                                      ? Text(
-                                          '${widget.patientName}',
-                                          style: TextStyle(
-                                              fontSize: 24, fontWeight: FontWeight.bold),
-                                          maxLines: 1,
-                                        )
-                                      : Text(
-                                          'Dr. ${widget.doctorName}',
-                                          style: TextStyle(
-                                              fontSize: 24, fontWeight: FontWeight.bold),
-                                          maxLines: 1,
-                                        ),
-                                  flex: 2,
-                                ),
-                                SizedBox(
-                                  height: 4,
-                                ),
-                                Expanded(
-                                  child: (widget.isDoc)
-                                      ? Text('By Dr. ${widget.doctorName}')
-                                      : Text(''),
-                                  flex: 2,
-                                ),
-                              ],
-                            ),
+                              ),
+                              SizedBox(
+                                height: 4,
+                              ),
+                              Expanded(
+                                child: (widget.isDoc)
+                                    ? Text(
+                                        '${widget.patientName}',
+                                        style: TextStyle(
+                                            fontSize: 24, fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                      )
+                                    : Text(
+                                        'Dr. ${widget.doctorName}',
+                                        style: TextStyle(
+                                            fontSize: 24, fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                      ),
+                                flex: 2,
+                              ),
+                              SizedBox(
+                                height: 4,
+                              ),
+                              Expanded(
+                                child: (widget.isDoc)
+                                    ? Text('By Dr. ${widget.doctorName}')
+                                    : Text(''),
+                                flex: 2,
+                              ),
+                            ],
                           ),
-                          flex: 6,
                         ),
                         Text(
                           widget.status,

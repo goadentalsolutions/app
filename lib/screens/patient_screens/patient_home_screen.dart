@@ -4,11 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goa_dental_clinic/constants.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/add_patient_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../classes/alert.dart';
 import '../../classes/get_initials.dart';
 import '../../classes/get_patient_details.dart';
 import '../../classes/pref.dart';
@@ -136,22 +138,17 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () async {
-      //     // await FirebaseMessaging.instance.getToken().then((token) {
-      //     //   setState(() {
-      //     //     print(token!);
-      //     //   });
-      //     // });
-      //     // return userToken;
-      //     // SharedPreferences pref = await SharedPreferences.getInstance();
-      //     // pref.setString('name', 'Rashmi Na ik');
-      //     Navigator.push(context, MaterialPageRoute(builder: (context) => AddPatientScreen()));
-      //     // auth.signOut();
-      //     // extractText();
-      //   },
-      //   child: Icon(Icons.add),
-      // ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          try {
+            await FlutterPhoneDirectCaller.callNumber("$clinicNumber");
+          }
+          catch(e){
+            Alert(context, e);
+          }
+        },
+        child: Icon(Icons.call, color: Colors.white,),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

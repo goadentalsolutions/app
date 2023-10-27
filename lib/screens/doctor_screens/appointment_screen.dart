@@ -22,6 +22,7 @@ import 'package:goa_dental_clinic/models/treatment_model.dart';
 import 'package:goa_dental_clinic/custom_widgets/note_input_card.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/nav_screen.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_container.dart';
+import 'package:googleapis/chat/v1.dart';
 
 import '../../classes/alert.dart';
 import '../../classes/pref.dart';
@@ -30,6 +31,7 @@ import '../../custom_widgets/treatment_plan_input_card.dart';
 import '../../custom_widgets/treatment_text_field.dart';
 import '../../models/image_model.dart';
 import '../../models/image_model2.dart';
+import '../../models/pre_model.dart';
 import '../../models/prescription_model.dart';
 import '../patient_screens/patient_details_screen.dart';
 import 'package:http/http.dart' as http;
@@ -64,6 +66,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   List<Widget> precription = [];
   List<Widget> notes = [];
   List<Widget> images = [];
+  List<PreModel> preList = [];
 
   @override
   void initState() {
@@ -79,6 +82,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     getName();
     getTreatmentPlans();
     getPrescriptionS();
+    getPre();
     getNote();
     getImages();
   }
@@ -87,6 +91,19 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     final data = await firestore.collection('Doctors').doc(uid).get();
     doctorName = data['name'];
     setState(() {});
+  }
+  
+  getPre() async {
+    final data = await firestore.collection('Patients').doc(widget.am.patientUid).collection('Plan Prescriptions').get();
+
+    setState(() {
+      preList.clear();
+      for(var pre in data.docs){
+        preList.add(PreModel(title: pre['title'], des: pre['des'], preId: pre['preId']));
+      }
+
+      preList.sort((a, b) => b.preId.compareTo(a.preId));
+    });
   }
 
   autoShowCards(itemNo, context, {tm = null}) {
@@ -244,6 +261,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'endTimeInMil': widget.am.endTimeInMil,
       'plan': widget.am.plan,
       'toothList': widget.am.toothList,
+      'status': 'pending',
     });
 
     await firestore
@@ -265,6 +283,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'month': widget.am.month,
       'plan': widget.am.plan,
       'toothList': widget.am.toothList,
+      'status': 'pending',
     });
 
     //uploading Treatment Plans
@@ -328,6 +347,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             .doc(toothNo.toString()).set({"tooth" : toothNo});
       }
     }
+    String id = DateTime.now().millisecondsSinceEpoch.toString();
 
     //uploading to doctor's history
     await firestore
@@ -350,6 +370,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'month': widget.am.month,
       'plan': widget.am.plan,
       'toothList': widget.am.toothList,
+      'orderId' : id,
     });
 
     //uploading to patient's history
@@ -373,6 +394,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       'month': widget.am.month,
       'plan': widget.am.plan,
       'toothList': widget.am.toothList,
+      'orderId' : id,
     });
 
     //uploading Prescriptions
@@ -710,45 +732,22 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                       height: 16,
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            IconText(
-                              text: 'Treatment Plan',
-                              icon: Icons.add,
-                              func: () {
-                                showTreatmentInputCard();
-                              },
-                            ),
-                            IconText(
-                              text: 'Prescription',
-                              icon: Icons.add,
-                              func: () {
-                                showPrescriptionInputCard();
-                              },
-                            ),
-                          ],
+                        IconText(
+                          text: 'Note',
+                          icon: Icons.add,
+                          func: () {
+                            showNoteCard();
+                          },
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            IconText(
-                              text: 'Note',
-                              icon: Icons.add,
-                              func: () {
-                                showNoteCard();
-                              },
-                            ),
-                            IconText(
-                              text: 'File',
-                              icon: Icons.add,
-                              func: () {
-                                showFileCard(size);
-                              },
-                            ),
-                          ],
+                        SizedBox(width: 32,),
+                        IconText(
+                          text: 'File',
+                          icon: Icons.add,
+                          func: () {
+                            showFileCard(size);
+                          },
                         ),
                       ],
                     ),
@@ -758,18 +757,38 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                     Container(
                       decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kGrey),),
                       width: double.infinity,
-                      padding: EdgeInsets.all(4.0),
+                      padding: EdgeInsets.all(8.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Plan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),),
-                          SizedBox(height: 4,),
+                          Text('Treatment Plan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),),
+                          SizedBox(height: 4 ,),
                           Text('${widget.am.plan}', style: TextStyle(fontSize: 16),),
                           SizedBox(height: 8,),
                           Wrap(
                             children: widget.am.toothList.map((e){
 
                               return FixedSizeTooth(index: e, onTap: (){}, nontapable: true, height: 40, width: 40,);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16,),
+                    Container(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kGrey),),
+                      width: double.infinity,
+                      padding: EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Prescriptions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),),
+                          SizedBox(height: 4 ,),
+                          ListView(
+                            shrinkWrap: true,
+                            children: preList.map((e){
+
+                              return ListTile(title: Text(e.title, style: TextStyle(fontSize: 18)), subtitle: Text(e.des, style: TextStyle(fontSize: 16)), contentPadding: EdgeInsets.all(0),);
                             }).toList(),
                           ),
                         ],

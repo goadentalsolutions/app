@@ -16,6 +16,7 @@ import '../../classes/date_time_parser.dart';
 import '../../classes/get_first_name.dart';
 import '../../classes/get_initials.dart';
 import '../../classes/meeting_data_source.dart';
+import '../../models/plan_model.dart';
 
 class PatientCalendarScreen extends StatefulWidget {
   const PatientCalendarScreen({Key? key}) : super(key: key);
@@ -38,16 +39,35 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
   List<Appointment> meetings = [];
   bool isLoading = true;
   TextEditingController planController = TextEditingController();
+  Duration appDuration = Duration(hours: 1);
+  List<PlanModel> planList = [];
+  PlanModel planModel = PlanModel(plan: 'checkup', toothList: []);
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     uid = auth.currentUser!.uid;
+    patientUid = uid;
     getDoctors();
     getPatients();
     getAppointments();
+    getPlans();
     // cell();
+  }
+
+  getPlans() async {
+
+    final data = await firestore.collection('Patients').doc(uid).collection('Plans').get();
+
+    setState(() {
+
+      planList.clear();
+      planList.add(PlanModel(plan: 'checkup', toothList: []));
+      for(var plan in data.docs){
+        planList.add(PlanModel(plan: plan['plan'], toothList: plan['toothList']));
+      }
+    });
   }
 
   getAppointments() async {
@@ -82,25 +102,39 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
   }
 
   requestAppointment(DateTimeParser parser) async {
+    var date = DateTime
+        .fromMillisecondsSinceEpoch(
+        int.parse(
+            startTimeInMil))
+        .add(appDuration);
+    print(date.minute);
+    endTimeInMil = date.millisecondsSinceEpoch.toString();
     try {
       print('processing request');
+
+      String startTime = parser.getFormattedTime();
+      String endTime = DateTimeParser(DateTime.fromMillisecondsSinceEpoch(int.parse(endTimeInMil)).toString()).getFormattedTime();
       AppointmentMessageModel amm =
       AppointmentMessageModel(date: parser.date,
-          startTime: parser.getFormattedTime(),
-          endTime: parser.getFormattedTime(),
+          startTime: startTime,
+          endTime: endTime,
           patientName: patientName,
           patientUid: patientUid,
           appId: appId.toString(),
           week: parser.getWeek(),
-          plan: planController.text,
-          toothList: [],
+          plan: planModel.plan,
+          toothList: planModel.toothList,
           msgId: DateTime
               .now()
               .millisecondsSinceEpoch
               .toString(),
-          message: 'Request for an appointment.',
+          message: 'Request for an appointment. $startTime - $endTime (Dr.$doctorName})',
           startTimeInMil: startTimeInMil,
           endTimeInMil: endTimeInMil, month: parser.getMonth());
+
+
+      print('DATE: ${DateTimeParser(DateTime.fromMillisecondsSinceEpoch(int.parse(endTimeInMil)).toString()).getFormattedTime()}');
+
       await firestore.collection('Doctors').doc(doctorUid).collection(
           'Messages').doc(amm.msgId).set(
           {
@@ -116,6 +150,8 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
             'startTimeInMil': amm.startTimeInMil,
             'endTimeInMil': amm.endTimeInMil,
             'month': amm.month,
+            'plan' : amm.plan,
+            'toothList' : amm.toothList,
           }
       );
 
@@ -139,7 +175,7 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
       //             AppointmentScreen(am: am)));
     }
     catch(e){
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enter valid values'), backgroundColor: Colors.red,));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enter valid values. $e'), backgroundColor: Colors.red,));
     }
   }
 
@@ -170,9 +206,7 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
     final data = await firestore.collection('Patients').doc(uid).get();
 
     String name = data['patientName'];
-    patientList.clear();
-    patientList.add(DropDownValueModel(name: name, value: uid));
-    setState(() {});
+    patientName = name;
     // final patients = await firestore.collection('Patients').get();
     // patientList.clear();
     // for (var patient in patients.docs) {
@@ -236,110 +270,143 @@ class _PatientCalendarScreenState extends State<PatientCalendarScreen> {
             showDialog(
                 context: context,
                 builder: (context) {
-                  return Material(
-                    color: Colors.transparent,
-                    child: Center(
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16)),
-                        height: size.height * 0.4,
-                        width: size.width * 0.8,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  return StatefulBuilder(builder: (BuildContext context, void Function(void Function()) setState) {
+                    return Material(
+                      color: Colors.transparent,
+                      child: Center(
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16)),
+                          height: size.height * 0.5,
+                          width: size.width * 0.8,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Appointment at',
-                                    style: TextStyle(
-                                        fontSize: 22,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold)),
-                                InkWell(child: Icon(Icons.highlight_remove_outlined, color: Colors.red,), onTap: (){
-                                  Navigator.pop(context);
-                                },)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Appointment at',
+                                        style: TextStyle(
+                                            fontSize: 22,
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold)),
+                                    InkWell(child: Icon(Icons.highlight_remove_outlined, color: Colors.red,), onTap: (){
+                                      Navigator.pop(context);
+                                    },)
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Text(
+                                  '$formattedTime $formmatedDate',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                SizedBox(
+                                  height: 16,
+                                ),
+                                DropDownTextField(
+                                  dropDownList: [
+                                    DropDownValueModel(
+                                        name: '1 hour', value: Duration(hours: 1)),
+                                    DropDownValueModel(
+                                        name: '1 hour 30 min', value: Duration(hours: 1, minutes: 30)),
+                                    DropDownValueModel(
+                                      name: '2 hour', value: Duration(hours: 3),),
+                                    DropDownValueModel(
+                                        name: '2 hour 30 min', value: Duration(hours: 2, minutes: 30)),
+                                    DropDownValueModel(
+                                        name: '3 hour', value: Duration(hours: 3)),
+                                    DropDownValueModel(
+                                        name: '3 hour 30 min', value: Duration(hours: 3, minutes: 30)),
+                                  ],
+                                  textFieldDecoration: InputDecoration(hintText: '${appDuration.inHours} hour', border: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.black),
+                                  ),),
+                                  onChanged: (value){
+                                    DropDownValueModel val = value;
+                                    setState((){
+                                      appDuration = val.value;
+                                    });
+                                  },
+                                ),
+                                SizedBox(
+                                  height: 16,
+                                ),
+                                Text(
+                                  'Doctor: ',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                DropDownTextField(
+                                  dropDownList: doctorList,
+                                  enableSearch: true,
+                                  searchDecoration: InputDecoration(hintText: 'Search'),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      DropDownValueModel val = value;
+                                      doctorName = val.name;
+                                      doctorUid = val.value;
+                                    });
+                                  },
+                                  textFieldDecoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.black),
+                                      ),
+                                      hintText: 'Add Doctor'),
+                                ),
+                                SizedBox(
+                                  height: 16,
+                                ),
+                                Text(
+                                  'Plan: ',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                DropDownTextField(
+                                  dropDownList: planList.map((e){
+                                    return DropDownValueModel(name: e.plan, value: e);
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      DropDownValueModel val = value;
+                                      planModel = val.value;
+                                    });
+                                  },
+                                  textFieldDecoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.black),
+                                      ),
+                                      hintText: 'Add Plan'),
+                                ),
+                                SizedBox(
+                                  height: 16,
+                                ),
+                                CustomButton(
+                                    text: 'Request Appointment',
+                                    backgroundColor: kPrimaryColor,
+                                    onPressed: () async {
+                                      await requestAppointment(parser);
+                                      Navigator.pop(context);
+                                    }),
                               ],
                             ),
-                            SizedBox(
-                              height: 8,
-                            ),
-                            Text(
-                              '$formattedTime $formmatedDate',
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox(
-                              height: 16,
-                            ),
-                            Text(
-                              'Doctor: ',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(
-                              height: 8,
-                            ),
-                            DropDownTextField(
-                              dropDownList: doctorList,
-                              enableSearch: true,
-                              searchDecoration: InputDecoration(hintText: 'Search'),
-                              onChanged: (value) {
-                                setState(() {
-                                  DropDownValueModel val = value;
-                                  doctorName = val.name;
-                                  doctorUid = val.value;
-                                });
-                              },
-                              textFieldDecoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.black),
-                                  ),
-                                  hintText: 'Add Doctor'),
-                            ),
-                            SizedBox(
-                              height: 16,
-                            ),
-                            Text(
-                              'Patient: ',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(
-                              height: 8,
-                            ),
-                            DropDownTextField(
-                              dropDownList: patientList,
-                              onChanged: (value) {
-                                setState(() {
-                                  DropDownValueModel val = value;
-                                  patientName = val.name;
-                                  patientUid = val.value;
-                                  print(patientUid);
-                                });
-                              },
-                              textFieldDecoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.black),
-                                  ),
-                                  hintText: 'Add Patient'),
-                            ),
-                            SizedBox(
-                              height: 16,
-                            ),
-                            Expanded(
-                              child: CustomButton(
-                                  text: 'Request Appointment',
-                                  backgroundColor: kPrimaryColor,
-                                  onPressed: () async {
-                                      await requestAppointment(parser);
-                                    Navigator.pop(context);
-                                  })),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    );
+                  },
                   );
                 });
           },

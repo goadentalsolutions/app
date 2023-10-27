@@ -138,13 +138,19 @@ class _PatientMessageScreenState extends State<PatientMessageScreen> {
                           )),
                         );
                       }
-                      return ListView.builder(
-                        itemBuilder: (context, index) {
-                          return msgList[index];
-                        },
-                        itemCount: msgList.length,
-                        shrinkWrap: true,
+                      return Column(
+                        children: msgList.map((e){
+
+                          return e;
+                        }).toList(),
                       );
+                      // return ListView.builder(
+                      //   itemBuilder: (context, index) {
+                      //     return msgList[index];
+                      //   },
+                      //   itemCount: msgList.length,
+                      //   shrinkWrap: true,
+                      // );
                     })
               ],
             ),

@@ -7,11 +7,12 @@ import 'package:goa_dental_clinic/screens/doctor_screens/tooth_selection_contain
 import '../constants.dart';
 
 class SelectionWithTooth extends StatefulWidget {
-  SelectionWithTooth({required this.title, required this.onAdd, required this.onChecked, this.readOnly = true, this.isChecked = false, this.addList});
+  SelectionWithTooth({required this.title, required this.onAdd, required this.onChecked, this.readOnly = true, this.isChecked = false, this.addList, this.isToothVisible =  true});
   Function(List<dynamic>, String, bool) onAdd;
   Function(bool, String) onChecked;
   bool readOnly;
   String title;
+  bool isToothVisible;
   bool isChecked;
   List<dynamic>? addList;
 
@@ -99,18 +100,21 @@ class _SelectionWithToothState extends State<SelectionWithTooth> {
                         ),
                       );
                     },
-                    child: Container(
-                      height: 40,
-                      padding: EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: kPrimaryColor,
-                        border: Border.all(color: Colors.white),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '+ Add Tooth',
-                          style: TextStyle(color: Colors.white),
+                    child: Visibility(
+                      visible: widget.isToothVisible,
+                      child: Container(
+                        height: 40,
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: kPrimaryColor,
+                          border: Border.all(color: Colors.white),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '+ Add Tooth',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ),

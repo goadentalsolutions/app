@@ -65,6 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'token' : userToken,
         'setup' : 1,
         'pass': pass,
+        'accessToken': (role != 'doctor') ? 'No token' :  null,
       }
     );
 

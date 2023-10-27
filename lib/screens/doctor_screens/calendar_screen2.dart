@@ -51,6 +51,7 @@ class _CalendarScreen2State extends State<CalendarScreen2> {
   TextEditingController planController = TextEditingController();
   TextEditingController patientController = TextEditingController();
   late DoctorModel dm;
+  Duration appDuration = Duration(hours: 1);
 
   @override
   void initState() {
@@ -61,19 +62,19 @@ class _CalendarScreen2State extends State<CalendarScreen2> {
     patientName = patientController.text;
     planController.text = widget.planModel.plan;
     getDoctors();
-    getAppointments();
   }
 
-  getAppointments() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future getAppointments(docUid) async {
+//     setState(() {
+// isLoading = true;
+//     });
 
     final datas = await firestore
         .collection('Doctors')
-        .doc(uid)
+        .doc(docUid)
         .collection('Appointments')
         .get();
+    meetings.clear();
 
     for (var data in datas.docs) {
       DateTime dt = DateTime.fromMillisecondsSinceEpoch(
@@ -100,11 +101,10 @@ class _CalendarScreen2State extends State<CalendarScreen2> {
         );
       }
     }
-
+    //
     setState(() {
       isLoading = false;
     });
-    return meetings;
   }
 
   getDoctors() async {
@@ -127,8 +127,17 @@ class _CalendarScreen2State extends State<CalendarScreen2> {
       }
     });
 
+    await getAppointments(dm.uid);
   }
 
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    controller.dispose();
+
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -148,12 +157,12 @@ class _CalendarScreen2State extends State<CalendarScreen2> {
                         Container(
                           height: size.height * 0.05,
                           width: size.width * 0.5,
-                          child: DropDownTextField(dropDownList: doctorList, onChanged: (value){
+                          child: DropDownTextField(dropDownList: doctorList, onChanged: (value) async {
                             DropDownValueModel val = value;
-                            DoctorModel dm2 = val.value;
                             setState(() {
+                              dm  = val.value;
                               doctorName = val.name;
-                              dm = dm2;
+                              getAppointments(dm.uid);
                             });
                           },enableSearch: true ,textFieldDecoration: InputDecoration(hintText: doctorName, hintStyle: TextStyle(color: Colors.black),), searchDecoration: InputDecoration(hintText: 'Search'),),
                         ),
@@ -161,191 +170,233 @@ class _CalendarScreen2State extends State<CalendarScreen2> {
                     ),
                   ),
                   Expanded(
-                    child: SfCalendar(
-                      view: CalendarView.week,
-                      dataSource: MeetingDataSource(meetings),
-                      onTap: (details) {
-                        var parser = DateTimeParser(details.date.toString());
-                        // creatingEvent(details!.date! , DateTime.now());
-                        appId = DateTime.parse(details.date.toString())
-                            .millisecondsSinceEpoch
-                            .toString();
-                        setState(() {
-                          formattedTime = parser.getFormattedTime();
-                          formmatedDate = parser.getFormattedDate();
-                          startTimeInMil =
-                              details.date!.millisecondsSinceEpoch.toString();
-                          endTimeInMil = details.date!
-                              .add(Duration(hours: 1))
+                    child: StatefulBuilder(builder: (BuildContext context, void Function(void Function()) setState) {
+                      return SfCalendar(
+                        view: CalendarView.week,
+                        dataSource: MeetingDataSource(meetings),
+                        onTap: (details) {
+                          var parser = DateTimeParser(details.date.toString());
+                          // creatingEvent(details!.date! , DateTime.now());
+                          appId = DateTime.parse(details.date.toString())
                               .millisecondsSinceEpoch
                               .toString();
-                        });
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return Material(
-                                color: Colors.transparent,
-                                child: Center(
-                                  child: Container(
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(16)),
-                                    height: size.height * 0.4,
-                                    width: size.width * 0.8,
-                                    child: Column(
-                                      crossAxisAlignment:
+                          setState(() {
+                            formattedTime = parser.getFormattedTime();
+                            formmatedDate = parser.getFormattedDate();
+                            startTimeInMil =
+                                details.date!.millisecondsSinceEpoch.toString();
+                            endTimeInMil = details.date!
+                                .add(Duration(hours: 1))
+                                .millisecondsSinceEpoch
+                                .toString();
+                          });
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: Center(
+                                    child: Container(
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                          BorderRadius.circular(16)),
+                                      height: size.height * 0.5,
+                                      width: size.width * 0.8,
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text('Appointment at',
-                                                style: TextStyle(
-                                                    fontSize: 22,
-                                                    color: Colors.black,
-                                                    fontWeight:
+                                            Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text('Appointment at',
+                                                    style: TextStyle(
+                                                        fontSize: 22,
+                                                        color: Colors.black,
+                                                        fontWeight:
                                                         FontWeight.bold)),
-                                            InkWell(
-                                              child: Icon(
-                                                Icons.highlight_remove_outlined,
-                                                color: Colors.red,
-                                              ),
-                                              onTap: () {
-                                                Navigator.pop(context);
+                                                InkWell(
+                                                  child: Icon(
+                                                    Icons.highlight_remove_outlined,
+                                                    color: Colors.red,
+                                                  ),
+                                                  onTap: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                )
+                                              ],
+                                            ),
+                                            SizedBox(
+                                              height: 8,
+                                            ),
+                                            Text(
+                                              '$formattedTime $formmatedDate',
+                                              style: TextStyle(
+                                                  fontSize: 18,
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                            SizedBox(
+                                              height: 16,
+                                            ),Text(
+                                              'Appointment duration: ',
+                                              style: TextStyle(fontSize: 16),
+                                            ),SizedBox(height: 8,),
+                                            DropDownTextField(
+                                              dropDownList: [
+                                                DropDownValueModel(
+                                                    name: '1 hour', value: Duration(hours: 1)),
+                                                DropDownValueModel(
+                                                    name: '1 hour 30 min', value: Duration(hours: 1, minutes: 30)),
+                                                DropDownValueModel(
+                                                  name: '2 hour', value: Duration(hours: 2),),
+                                                DropDownValueModel(
+                                                    name: '2 hour 30 min', value: Duration(hours: 2, minutes: 30)),
+                                                DropDownValueModel(
+                                                    name: '3 hour', value: Duration(hours: 3)),
+                                                DropDownValueModel(
+                                                    name: '3 hour 30 min', value: Duration(hours: 3, minutes: 30)),
+                                              ],
+                                              textFieldDecoration: InputDecoration(hintText: '${appDuration.inHours} hour', border: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.black),
+                                              ),),
+                                              onChanged: (value){
+                                                DropDownValueModel val = value;
+                                                setState((){
+                                                  appDuration = val.value;
+                                                });
                                               },
-                                            )
+                                            ),
+                                            SizedBox(
+                                              height: 16,
+                                            ),
+                                            // Text(
+                                            //   'Doctor: ',
+                                            //   style: TextStyle(fontSize: 16),
+                                            // ),
+                                            // SizedBox(
+                                            //   height: 8,
+                                            // ),
+                                            // DropDownTextField(
+                                            //   dropDownList: doctorList,
+                                            //   onChanged: (value) {
+                                            //     setState(() {
+                                            //       DropDownValueModel val = value;
+                                            //       doctorName = val.name;
+                                            //     });
+                                            //   },
+                                            //   textFieldDecoration: InputDecoration(
+                                            //       border: OutlineInputBorder(
+                                            //         borderSide: BorderSide(color: Colors.black),
+                                            //       ),
+                                            //       hintText: 'Add Doctor'),
+                                            // ),
+                                            // SizedBox(
+                                            //   height: 16,
+                                            // ),
+                                            Text(
+                                              'Patient: ',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                            SizedBox(
+                                              height: 8,
+                                            ),
+                                            TextField(
+                                              controller: patientController,
+                                              decoration: InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                        color: Colors.black),
+                                                  ),
+                                                  hintText: 'Add Patient'),
+                                            ),
+                                            SizedBox(
+                                              height: 16,
+                                            ),
+                                            Text(
+                                              'Plan: ',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                            SizedBox(
+                                              height: 8,
+                                            ),
+                                            TextField(
+                                              controller: planController,
+                                              decoration: InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                        color: Colors.black),
+                                                  ),
+                                                  hintText: 'Type plan'),
+                                            ),
+                                            SizedBox(
+                                              height: 16,
+                                            ),
+                                            CustomButton(
+                                                text: 'Schedule',
+                                                backgroundColor: kPrimaryColor,
+                                                onPressed: () async {
+                                                  var date = DateTime
+                                                      .fromMillisecondsSinceEpoch(
+                                                      int.parse(
+                                                          startTimeInMil))
+                                                      .add(appDuration);
+                                                  print(date.minute);
+                                                  endTimeInMil = date.millisecondsSinceEpoch.toString();
+                                                  try {
+                                                    AppModel am = AppModel(
+                                                        plan: planController.text,
+                                                        toothList: widget
+                                                            .planModel.toothList,
+                                                        patientName: patientName,
+                                                        doctorName: doctorName,
+                                                        date: parser.date,
+                                                        week: parser.getWeek(),
+                                                        time: parser
+                                                            .getFormattedTime(),
+                                                        doctorUid: dm.uid,
+                                                        patientUid:
+                                                        widget.pm.patientUid,
+                                                        pm: widget.pm,
+                                                        appId: appId!,
+                                                        startTimeInMil:
+                                                        startTimeInMil,
+                                                        endTimeInMil:
+                                                        endTimeInMil,
+                                                        month: parser.getMonth());
+                                                    Navigator.pop(context);
+                                                    Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                AppointmentScreen(
+                                                                    am: am)));
+                                                  } catch (e) {
+                                                    Navigator.pop(context);
+                                                    ScaffoldMessenger.of(context)
+                                                        .showSnackBar(SnackBar(
+                                                      content: Text(
+                                                          'Enter valid values $e'),
+                                                      backgroundColor: Colors.red,
+                                                    ));
+                                                  }
+                                                }),
                                           ],
                                         ),
-                                        SizedBox(
-                                          height: 8,
-                                        ),
-                                        Text(
-                                          '$formattedTime $formmatedDate',
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.w500),
-                                        ),
-                                        SizedBox(
-                                          height: 16,
-                                        ),
-                                        // Text(
-                                        //   'Doctor: ',
-                                        //   style: TextStyle(fontSize: 16),
-                                        // ),
-                                        // SizedBox(
-                                        //   height: 8,
-                                        // ),
-                                        // DropDownTextField(
-                                        //   dropDownList: doctorList,
-                                        //   onChanged: (value) {
-                                        //     setState(() {
-                                        //       DropDownValueModel val = value;
-                                        //       doctorName = val.name;
-                                        //     });
-                                        //   },
-                                        //   textFieldDecoration: InputDecoration(
-                                        //       border: OutlineInputBorder(
-                                        //         borderSide: BorderSide(color: Colors.black),
-                                        //       ),
-                                        //       hintText: 'Add Doctor'),
-                                        // ),
-                                        // SizedBox(
-                                        //   height: 16,
-                                        // ),
-                                        Text(
-                                          'Patient: ',
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        SizedBox(
-                                          height: 8,
-                                        ),
-                                        TextField(
-                                          controller: patientController,
-                                          decoration: InputDecoration(
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Colors.black),
-                                              ),
-                                              hintText: 'Add Patient'),
-                                        ),
-                                        SizedBox(
-                                          height: 16,
-                                        ),
-                                        Text(
-                                          'Plan: ',
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        SizedBox(
-                                          height: 8,
-                                        ),
-                                        TextField(
-                                          controller: planController,
-                                          decoration: InputDecoration(
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Colors.black),
-                                              ),
-                                              hintText: 'Type plan'),
-                                        ),
-                                        SizedBox(
-                                          height: 16,
-                                        ),
-                                        Expanded(
-                                          child: CustomButton(
-                                              text: 'Schedule',
-                                              backgroundColor: kPrimaryColor,
-                                              onPressed: () async {
-                                                try {
-                                                  AppModel am = AppModel(
-                                                      plan: planController.text,
-                                                      toothList: widget
-                                                          .planModel.toothList,
-                                                      patientName: patientName,
-                                                      doctorName: doctorName,
-                                                      date: parser.date,
-                                                      week: parser.getWeek(),
-                                                      time: parser
-                                                          .getFormattedTime(),
-                                                      doctorUid: dm.uid,
-                                                      patientUid:
-                                                          widget.pm.patientUid,
-                                                      pm: widget.pm,
-                                                      appId: appId!,
-                                                      startTimeInMil:
-                                                          startTimeInMil,
-                                                      endTimeInMil:
-                                                          endTimeInMil,
-                                                      month: parser.getMonth());
-                                                  Navigator.pop(context);
-                                                  Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              AppointmentScreen(
-                                                                  am: am)));
-                                                } catch (e) {
-                                                  Navigator.pop(context);
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(SnackBar(
-                                                    content: Text(
-                                                        'Enter valid values $e'),
-                                                    backgroundColor: Colors.red,
-                                                  ));
-                                                }
-                                              }),
-                                        ),
-                                      ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            });
-                      },
-                      controller: controller,
+                                );
+                              });
+                        },
+                        controller: controller,
+                      );
+                    },
                     ),
                   ),
                 ],

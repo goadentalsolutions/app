@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -26,12 +27,11 @@ class _FileInputCardState extends State<FileInputCard> {
   String url = '';
   TextEditingController controller = TextEditingController();
 
-  pickImage() async {
-    final photo = await ImagePicker.platform.pickImage(source: ImageSource.gallery);
-    if(photo != null){
-      print(photo.path);
+  pickFile() async {
+    FilePickerResult? res = await FilePicker.platform.pickFiles();
+    if(res != null){
       setState(() {
-        file = File(photo.path);
+        file = File(res.files.single.path!);
       });
     }
     controller.text = '';
@@ -91,7 +91,7 @@ class _FileInputCardState extends State<FileInputCard> {
                 ),
                 InkWell(
                   onTap: () {
-                    pickImage();
+                    pickFile();
                   },
                   child: Align(
                     alignment: AlignmentDirectional.center,

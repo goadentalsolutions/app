@@ -18,6 +18,7 @@ import 'package:goa_dental_clinic/custom_widgets/selection_prescription_card.dar
 import 'package:goa_dental_clinic/models/image_model.dart';
 import 'package:goa_dental_clinic/models/patient_model.dart';
 import 'package:goa_dental_clinic/screens/doctor_screens/test_screen.dart';
+import 'package:goa_dental_clinic/screens/login_screen.dart';
 import 'package:goa_dental_clinic/screens/patient_screens/view_patient_appointments.dart';
 import 'package:toast/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -44,6 +45,7 @@ class PatientDetailsScreen extends StatefulWidget {
 class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   bool isLoading = false;
   bool isImgUploading = false;
+  bool isImgUploading2 = false;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   List<String> medHisList = [];
@@ -52,6 +54,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   List<PlanModel> donePlanList = [];
   List<PreModel> preList = [];
   List<ImageModel> imList = [];
+  List<ImageModel> bloodList = [];
   String accessToken = 'No token';
 
   getMedicalHistory() async {
@@ -85,7 +88,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     setState(() {
       for (var pre in data.docs) {
         preList.add(
-          PreModel(title: pre['title'], des: pre['des']),
+          PreModel(title: pre['title'], des: pre['des'], preId: pre['preId']),
         );
       }
     });
@@ -198,11 +201,18 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       isLoading = true;
     });
     final data = await firestore.collection('Patients').doc(widget.uid).collection('Files').get();
+    final data2 = await firestore.collection('Patients').doc(widget.uid).collection('Blood Report').get();
 
     setState(() {
       imList.clear();
       for(var pic in data.docs){
         imList.add(ImageModel(url: pic['url'], description: pic['des']));
+      }
+    });
+    setState(() {
+      bloodList.clear();
+      for(var pic in data2.docs){
+        bloodList.add(ImageModel(url: pic['url'], description: pic['des']));
       }
     });
     setState(() {
@@ -254,6 +264,50 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     }
   }
 
+  uploadBloodReport(file, des) async {
+    try {
+      if (file != null) {
+        setState(() {
+          isImgUploading2 = true;
+        });
+        late UploadTask ut;
+        FirebaseStorage storage = FirebaseStorage
+            .instance;
+
+        ut = storage.ref().child('images').child(
+            DateTime
+                .now()
+                .millisecondsSinceEpoch
+                .toString()).putFile(file);
+        var snapshot = await ut
+            .whenComplete(() {});
+
+        String url = await snapshot.ref
+            .getDownloadURL();
+        imList.add(ImageModel(
+            url: url, description: des));
+        setState;
+        await firestore.collection('Patients').doc(
+            widget.uid).collection('Blood Report').doc(
+            des).set(
+            {
+              'url': url,
+              'des': des,
+            }
+        );
+        setState(() {
+          isImgUploading2 = false;
+        });
+        print(url);
+      }
+    }catch(e){
+      Alert(context, e);
+      setState(() {
+        isImgUploading2 = false;
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +322,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             widget.showBackIcon ? InkWell(
                               child: Icon(
@@ -323,96 +378,175 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             SizedBox(
                               width: 8,
                             ),
-                            Text(
-                              "${widget.pm?.patientName}",
-                              style: TextStyle(
-                                  overflow: TextOverflow.ellipsis,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold),
+                            Expanded(
+                              child: Text(
+                                "${widget.pm?.patientName}",
+                                style: TextStyle(
+                                    overflow: TextOverflow.ellipsis,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold),
+                              ),
                             ),
-                            Spacer(),
                             ElevatedButton(onPressed: (){
                               Navigator.push(context, MaterialPageRoute(builder: (context) => ViewPatientAppointments(uid: widget.uid)));
                             }, child: Text('View Appointments')),
                           ],
                         ),
                         SizedBox(height: 12,),
-                        ExpansionTile(
-                          title: Text(
-                            'Access Token',
-                            style: TextStyle(fontSize: 20),
-                          ),
+                        Wrap(
                           children: [
-                            InkWell(child: Text('$accessToken', style: TextStyle(fontSize: 16, color: Colors.blue),), onTap: () async {
-                              //copy
-                              await  Clipboard.setData(ClipboardData(text: accessToken));
-                              flut.Fluttertoast.showToast(
-                                  msg: "Access Token Copied!",
-                                  toastLength: flut.Toast.LENGTH_LONG,
-                                  gravity: ToastGravity.BOTTOM,
-                                  timeInSecForIosWeb: 2,
-                                  backgroundColor: Colors.black,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0
-                              );
-                            },),
-                            SizedBox(height: 8,),
-                          ],
-                          initiallyExpanded: true,
-                        ),
-                        SizedBox(
-                          height: widget.pm!.dob.isNotEmpty ? 12 : 0,
-                        ),
-                        Visibility(
-                          visible: widget.pm!.dob.isNotEmpty,
-                          child: ExpansionTile(
-                            title: Text(
-                              'Personal details',
-                              style: TextStyle(fontSize: 20),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Container(
+                                child: Row(
+                                  children: [
+                                    Text('Access Token: ', style: TextStyle(fontSize: 16),),
+                                    Expanded(
+                                      child: InkWell(child: Text('${accessToken}', style: TextStyle(fontSize: 18, color: kPrimaryColor),), onTap: () async {
+                                              await  Clipboard.setData(ClipboardData(text: accessToken));
+                                              flut.Fluttertoast.showToast(
+                                                  msg: "Access Token Copied!",
+                                                  toastLength: flut.Toast.LENGTH_LONG,
+                                                  gravity: ToastGravity.BOTTOM,
+                                                  timeInSecForIosWeb: 2,
+                                                  backgroundColor: Colors.black,
+                                                  textColor: Colors.white,
+                                                  fontSize: 16.0
+                                              );
+                                      },),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            children: [
-                              RowText(
-                                  title: 'Date of birth: ',
-                                  content: widget.pm!.dob),
-                            ],
-                            initiallyExpanded: true,
-                          ),
-                        ),
-                        SizedBox(
-                          height: 12,
-                        ),
-                        ExpansionTile(
-                          initiallyExpanded: true,
-                          title: Text(
-                            'Contact details',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          children: [
-                            RowText(
-                              title: 'Phone Number: ',
-                              content: widget.pm!.phoneNumber1,
-                              func: () {
-                                call(widget.pm!.phoneNumber1);
-                              },
-                              fontColor: Colors.blue,
-                            ),
-                            (widget.pm!.email.isNotEmpty)
-                                ? RowText(
-                                    title: 'Email: ',
-                                    content: widget.pm!.email,
-                                    func: () {
+                            (widget.pm!.email.isNotEmpty) ? Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Container(
+                                child: Row(
+                                  children: [
+                                    Text('Email: ', style: TextStyle(fontSize: 16),),
+                                    InkWell(child: Text('${widget.pm!.email}', style: TextStyle(fontSize: 16, color: kPrimaryColor),), onTap: (){
                                       sendEmail(widget.pm!.email, "", "");
-                                    },
-                                    fontColor: Colors.blue,
-                                  )
-                                : Container(),
-                            (widget.pm!.streetAddress.isNotEmpty)
-                                ? RowText(
-                                    title: 'Street Address: ',
-                                    content: widget.pm!.streetAddress)
-                                : Container(),
+                                    },),
+                                  ],
+                                ),
+                              ),
+                            ) : Container(height: 1, width: 1,),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Container(
+                                child: Row(
+                                  children: [
+                                    Text('Phone: ', style: TextStyle(fontSize: 16),),
+                                    Expanded(
+                                      child: InkWell(child: Text('${widget.pm!.phoneNumber1}', style: TextStyle(fontSize: 16, color: kPrimaryColor),), onTap: (){
+                                        call(widget.pm!.phoneNumber1);
+                                      },),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        (widget.pm!.dob.isNotEmpty) ? Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Container(
+                                child: Row(
+                                  children: [
+                                    Text('Dob: ', style: TextStyle(fontSize: 16),),
+                                    Expanded(child: Text('${widget.pm!.dob}', style: TextStyle(fontSize: 16),),),
+                                  ],
+                                ),
+                              ),
+                            ) : Container(height: 1, width: 1,),
+                        (widget.pm!.streetAddress.isNotEmpty) ? Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Container(
+                                child: Row(
+                                  children: [
+                                    Text('Address: ', style: TextStyle(fontSize: 16),),
+                                    Expanded(child: Text('${widget.pm!.streetAddress}', style: TextStyle(fontSize: 16),)),
+                                  ],
+                                ),
+                              ),
+                            ) : Container(height: 1, width: 1,),
                           ],
                         ),
+                        // ExpansionTile(
+                        //   title: Text(
+                        //     'Access Token',
+                        //     style: TextStyle(fontSize: 20),
+                        //   ),
+                        //   children: [
+                        //     InkWell(child: Text('$accessToken', style: TextStyle(fontSize: 16, color: Colors.blue),), onTap: () async {
+                        //       //copy
+                        //       await  Clipboard.setData(ClipboardData(text: accessToken));
+                        //       flut.Fluttertoast.showToast(
+                        //           msg: "Access Token Copied!",
+                        //           toastLength: flut.Toast.LENGTH_LONG,
+                        //           gravity: ToastGravity.BOTTOM,
+                        //           timeInSecForIosWeb: 2,
+                        //           backgroundColor: Colors.black,
+                        //           textColor: Colors.white,
+                        //           fontSize: 16.0
+                        //       );
+                        //     },),
+                        //     SizedBox(height: 8,),
+                        //   ],
+                        //   initiallyExpanded: true,
+                        // ),
+                        // SizedBox(
+                        //   height: widget.pm!.dob.isNotEmpty ? 12 : 0,
+                        // ),
+                        // Visibility(
+                        //   visible: widget.pm!.dob.isNotEmpty,
+                        //   child: ExpansionTile(
+                        //     title: Text(
+                        //       'Personal details',
+                        //       style: TextStyle(fontSize: 20),
+                        //     ),
+                        //     children: [
+                        //       RowText(
+                        //           title: 'Date of birth: ',
+                        //           content: widget.pm!.dob),
+                        //     ],
+                        //     initiallyExpanded: true,
+                        //   ),
+                        // ),
+                        // SizedBox(
+                        //   height: 12,
+                        // ),
+                        // ExpansionTile(
+                        //   initiallyExpanded: true,
+                        //   title: Text(
+                        //     'Contact details',
+                        //     style: TextStyle(fontSize: 20),
+                        //   ),
+                        //   children: [
+                        //     RowText(
+                        //       title: 'Phone Number: ',
+                        //       content: widget.pm!.phoneNumber1,
+                        //       func: () {
+                        //         call(widget.pm!.phoneNumber1);
+                        //       },
+                        //       fontColor: Colors.blue,
+                        //     ),
+                        //     (widget.pm!.email.isNotEmpty)
+                        //         ? RowText(
+                        //             title: 'Email: ',
+                        //             content: widget.pm!.email,
+                        //             func: () {
+                        //               sendEmail(widget.pm!.email, "", "");
+                        //             },
+                        //             fontColor: Colors.blue,
+                        //           )
+                        //         : Container(),
+                        //     (widget.pm!.streetAddress.isNotEmpty)
+                        //         ? RowText(
+                        //             title: 'Street Address: ',
+                        //             content: widget.pm!.streetAddress)
+                        //         : Container(),
+                        //   ],
+                        // ),
                         SizedBox(
                           height: 12,
                         ),
@@ -443,7 +577,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                         ),
                         ExpansionTile(
                           initiallyExpanded: true,
-                          title: Text("Plans", style: TextStyle(fontSize: 20)),
+                          title: Text("Treatment Plans", style: TextStyle(fontSize: 20)),
                           expandedCrossAxisAlignment: CrossAxisAlignment.start,
                           expandedAlignment: Alignment.centerLeft,
                           children: pendingPlanList.map((e) {
@@ -460,7 +594,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                         ),
                         ExpansionTile(
                           initiallyExpanded: true,
-                          title: Text("Completed Plans",
+                          title: Text("Completed Treatment Plans",
                               style: TextStyle(fontSize: 20)),
                           expandedCrossAxisAlignment: CrossAxisAlignment.start,
                           expandedAlignment: Alignment.centerLeft,
@@ -517,7 +651,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             },
                           ) : Icon(Icons.keyboard_arrow_down_outlined, color: kPrimaryColor,),
                           title:
-                              Text("Photo's", style: TextStyle(fontSize: 20)),
+                              Text("X-rays", style: TextStyle(fontSize: 20)),
                           expandedCrossAxisAlignment: CrossAxisAlignment.start,
                           expandedAlignment: Alignment.centerLeft,
                           children: [Container(
@@ -533,6 +667,53 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                               ),
                             ),
                           ),]
+                        ),
+                        SizedBox(
+                          height: 12,
+                        ),
+                        ExpansionTile(
+                            initiallyExpanded: true,
+                            trailing: (!widget.isPatient) ? InkWell(
+                              child: CircleAvatar(
+                                child: isImgUploading ? Center(child: CircularProgressIndicator(color: Colors.white,),) : Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                ),
+                                radius: 15,
+                                backgroundColor: kPrimaryColor,
+                              ),
+                              onTap: () {
+
+                                if(!isImgUploading2) {
+                                  showDialog(context: context, builder: (
+                                      context) {
+                                    return FileInputCard(
+                                        size: size, onUpload: (file, des) async {
+                                      uploadBloodReport(file, des);
+                                    });
+                                  },);
+                                }else{
+
+                                }
+                              },
+                            ) : Icon(Icons.keyboard_arrow_down_outlined, color: kPrimaryColor,),
+                            title:
+                            Text("Blood Report", style: TextStyle(fontSize: 20)),
+                            expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                            expandedAlignment: Alignment.centerLeft,
+                            children: [Container(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: bloodList.map((e) {
+                                    return Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: ImageDesContainer(im: e),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),]
                         ),
                         SizedBox(
                           height: 12,

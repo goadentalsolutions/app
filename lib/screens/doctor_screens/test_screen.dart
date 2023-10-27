@@ -39,6 +39,11 @@ class _TestScreenState extends State<TestScreen> {
   String title = '', des = '';
   bool isChecked = false;
   bool isLoading = false;
+  List<PlanModel> noToothList = [
+    PlanModel(plan: 'Scalling and polishing', toothList: []),
+    PlanModel(plan: 'Deep Scaling', toothList: []),
+    PlanModel(plan: 'Complete denture', toothList: []),
+  ];
 
   createCard() {
     showDialog(
@@ -140,7 +145,7 @@ class _TestScreenState extends State<TestScreen> {
                           backgroundColor: kPrimaryColor,
                           onPressed: () {
                             setState(() {
-                              PreModel pm = PreModel(title: title, des: des, isChecked: isChecked);
+                              PreModel pm = PreModel(title: title, des: des, isChecked: isChecked, preId: DateTime.now().millisecondsSinceEpoch.toString());
                               preList.add(pm);
                               if(isChecked){
                                 selectedPreList.add(pm);
@@ -174,6 +179,10 @@ class _TestScreenState extends State<TestScreen> {
 
 
   save() async {
+    setState(() {
+      isLoading = true;
+    });
+
     for (var e in selectedPreList) {
       print("${e.title + e.des.toString()}");
     }
@@ -189,7 +198,6 @@ class _TestScreenState extends State<TestScreen> {
         "toothList": plan.toothList,
       });
     }
-
     for (var pre in selectedPreList) {
       firestore
           .collection('Patients')
@@ -199,8 +207,13 @@ class _TestScreenState extends State<TestScreen> {
           .set({
         "title": pre.title,
         "des": pre.des,
+        "preId": pre.preId,
       });
     }
+
+    setState(() {
+      isLoading = false;
+    });
 
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => NavScreen()));
@@ -243,7 +256,7 @@ class _TestScreenState extends State<TestScreen> {
       }
       for (var pre in data2.docs) {
         list2.add(
-          PreModel(title: pre['title'], des: pre['des'], isChecked: true),
+          PreModel(title: pre['title'], des: pre['des'], isChecked: true, preId: pre['preId']),
         );
       }
     }
@@ -274,11 +287,11 @@ class _TestScreenState extends State<TestScreen> {
         PlanModel(plan: 'Removable partial denture', toothList: []),
       );
       planList.add(
-        PlanModel(plan: 'Complete denture', toothList: []),
+        PlanModel(plan: 'Complete denture', toothList: [],),
       );
 
       preList.add(
-        PreModel(title: 'Drug', des: 'drug is harmful'),
+        PreModel(title: 'Drug', des: 'drug is harmful', preId: DateTime.now().millisecondsSinceEpoch.toString()),
       );
 
       List<PlanModel> pmList = [];
@@ -333,6 +346,16 @@ class _TestScreenState extends State<TestScreen> {
     });
   }
 
+  isToothVisible(PlanModel e){
+    bool res = true;
+    noToothList.forEach((element) {
+      if(element.plan == e.plan)
+        res = false;
+    });
+
+    return res;
+  }
+
   @override
   Widget build(BuildContext context) {
     // addInitialCards();
@@ -343,6 +366,7 @@ class _TestScreenState extends State<TestScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          if(!isLoading)
           save();
         },
         child: isLoading ? Center(child: CircularProgressIndicator(color: Colors.white,)) : Icon(Icons.save),
@@ -357,8 +381,10 @@ class _TestScreenState extends State<TestScreen> {
                 Container(
                   child: Column(
                     children: planList.map((e) {
+
                       return SelectionWithTooth(
                         title: e.plan,
+                        isToothVisible: isToothVisible(e),
                         addList: e.toothList,
                         onAdd: (list, title, isChecked) {
                           e.toothList = list;
@@ -443,12 +469,12 @@ class _TestScreenState extends State<TestScreen> {
                     return SelectionPrescriptionCard(title: e.title, onChecked: (value, title, des){
                       setState(() {
                         if(value){
-                          selectedPreList.add(PreModel(title: title, des: des, isChecked: value),);
+                          selectedPreList.add(PreModel(title: title, des: des, isChecked: value, preId: DateTime.now().millisecondsSinceEpoch.toString()),);
                           Provider.of<AddPreProvider>(context, listen: false)
                               .setPList(selectedPreList);
                         }
                         else{
-                          selectedPreList.remove(PreModel(title: title, des: des, isChecked: value),);
+                          selectedPreList.remove(PreModel(title: title, des: des, isChecked: value, preId: DateTime.now().millisecondsSinceEpoch.toString()),);
                           Provider.of<AddPreProvider>(context, listen: false)
                               .setPList(selectedPreList);
                         }

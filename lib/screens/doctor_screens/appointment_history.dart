@@ -5,6 +5,7 @@ import 'package:goa_dental_clinic/constants.dart';
 
 import '../../custom_widgets/appointment_card.dart';
 import '../../custom_widgets/appointment_history_card.dart';
+import '../login_screen.dart';
 
 class AppointmentHistory extends StatefulWidget {
   const AppointmentHistory({Key? key}) : super(key: key);
@@ -43,6 +44,13 @@ class _AppointmentHistoryState extends State<AppointmentHistory> {
     Size size = MediaQuery.of(context).size;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.logout),
+        backgroundColor: kPrimaryColor, onPressed: () async {
+        await auth.signOut();
+        Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      },
+      ),
       appBar: AppBar(
         elevation: 0,
         title: Text(
@@ -68,11 +76,18 @@ class _AppointmentHistoryState extends State<AppointmentHistory> {
                 appList.clear();
                 for (var app in snapshot.data!.docs) {
                   try {
+                    String orderId = app['orderId'];
                     String status = app['status'];
-                    if(status != 'Cancelled')
-                    if(DateTime.now().millisecondsSinceEpoch > double.parse(app['endTimeInMil'])){
-                      status = 'completed';
+                    if(status != 'Cancelled') {
+                      if (DateTime
+                          .now()
+                          .millisecondsSinceEpoch >
+                          double.parse(app['endTimeInMil'])) {
+                        status = 'completed';
+                        orderId = app['endTimeInMil'];
+                      }
                     }
+
                     appList.add(AppointmentHistoryCard(
                         size: size,
                         patientName: app['patientName'],
@@ -89,15 +104,16 @@ class _AppointmentHistoryState extends State<AppointmentHistory> {
                         startTimeInMil: app['startTimeInMil'],
                         month: app['month'],
                         endTimeInMil: app['endTimeInMil'],
+                      orderId: orderId,
                         refresh: () {}, plan: app['plan'], toothList: app['toothList'],));
-
-                    appList.sort((a, b) => b.appId.compareTo(a.appId));
 
                   } catch (e) {
                     print(e);
                     continue;
                   }
                 }
+                
+                appList.sort((a, b) => b.orderId.compareTo(a.orderId));
 
                 return ListView.builder(
                     itemBuilder: (context, index) {
